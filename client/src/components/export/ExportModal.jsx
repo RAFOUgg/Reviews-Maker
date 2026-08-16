@@ -25,7 +25,7 @@ import {
 import TemplateRenderer from './TemplateRenderer';
 import RatioSelector from '../shared/config/RatioSelector';
 import WatermarkEditor from './WatermarkEditor';
-import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants';
+import { DEFAULT_TEMPLATES, isTemplatePaginable } from '../../store/exportMakerConstants';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
 import { serializeRenderToHtml, serializeMultiPageHtml, downloadHtml } from '../../utils/htmlExport';
@@ -121,40 +121,28 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // modules, ordre) vient de la config de la review, seul le CADRE est un choix d'export.
     const config = ratioExport ? { ...configEnregistree, ratio: ratioExport } : configEnregistree;
 
-    // Pagination (Chantier Phase 2, corrigé 2026-07-27) : `useExportMakerPagesStore` est la session
-    // d'édition Export Maker en cours — jamais persistée sur la review elle-même. Le chemin
-    // standalone (bouton "Exporter" sur une review déjà sauvegardée, sans session Export Maker
-    // ouverte) n'avait donc JAMAIS de pagination, quel que soit le volume réel de données : un
-    // canevas à hauteur fixe (ex. 1080px en 16:9) avec `overflow:hidden` coupait silencieusement
-    // tout ce qui dépassait — jusqu'à ~65% d'une fiche dense (pipelines complets, cf. Phase
-    // précédente) pouvait disparaître sans aucun signal. Repli : si aucune session de pages n'est
-    // active MAIS que le contenu est dense (même heuristique que `TemplateSelector`), générer des
-    // pages par défaut via `getDefaultPages` (déjà utilisées par le mode édition) plutôt que de
-    // rendre un unique canevas qui débordera silencieusement.
-    const sessionPagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
-    const sessionPages = useExportMakerPagesStore((state) => state.pages);
-    const noSessionPages = !(sessionPagesEnabled && sessionPages.length > 1);
-    // Pagination adaptative (Chantier D, 2026-07-31) : pour `detailedCard`, remplace le lookup
-    // statique `getDefaultPages` par une vraie mesure de hauteur (voir `useAdaptivePages.js`) — le
-    // hook retombe lui-même sur `getDefaultPages` pendant/à défaut de mesure, donc aucun risque
-    // d'export vide. `enabled` désactive tout calcul (mesure incluse) quand une session de pages est
-    // déjà active OU que le contenu est trop léger pour justifier une pagination.
-    // `isMeasuring` était ignoré ici — seul l'aperçu Studio le consommait. Le commentaire ci-dessus
-    // dit vrai (le repli statique évite un export VIDE), mais il évite le mauvais danger : pendant
-    // la mesure, `getDefaultPages` rend des pages dont les identifiants ne correspondent à aucun
-    // module réel du template, si bien que le filtre par page laisse TOUT passer sur CHAQUE page.
-    // Mesuré le 2026-08-10 sur le Rapport de Traçabilité : 5 pages identiques remplies à 98,6 %,
-    // là où la mesure terminée en produit 2 à 80,2/76,7 %. Un export complet mais faux est plus
-    // trompeur qu'un export vide — il part chez le client sans que rien ne signale l'erreur.
-    // `enabled` ne dépend plus d'une heuristique de densité (cf. `useAdaptivePages.js`) : on mesure,
-    // et `isAdaptive` dit si la mesure a VRAIMENT conclu à plusieurs pages. Le repli statique du
-    // hook n'est donc jamais pris pour une pagination mesurée — une review légère continue de se
-    // rendre sur une page unique, une review dense est scindée quel que soit son type de produit.
+    // ── PAGINATION : LA MESURE, ET RIEN D'AUTRE (2026-08-16) ───────────────────────────────────
+    //
+    // Il y avait ici DEUX sources concurrentes, et la mauvaise gagnait. Une « session de pages »
+    // composée à la main dans l'éditeur (onglet Pagination, depuis supprimé) désactivait purement
+    // et simplement la mesure : `enabled: noSessionPages`. L'utilisateur qui touchait à la
+    // pagination troquait donc, sans le savoir, une répartition MESURÉE contre une trame DEVINÉE —
+    // et les gabarits statiques décrivaient leurs pages avec des clés `contentModules`
+    // (`typeCulture`, `cannabinoids`…) quand le rendu attend des ids de BLOCS (`masthead`,
+    // `pipeline:*`, `gisement:*`). Aucun id ne se résolvant, le filtre par page laissait TOUT
+    // passer sur CHAQUE page : mesuré le 2026-08-10 sur le Rapport de Traçabilité, 5 pages
+    // identiques remplies à 98,6 %, là où la mesure en produit 2 à 80,2/76,7 %.
+    //
+    // Une seule source demeure : la hauteur réellement rendue de chaque bloc. Le seul réglage qui
+    // reste à l'utilisateur est un REFUS (`paginationDisabled`) — « tout sur une page, quitte à ce
+    // que ça déborde » — parce que c'est un choix légitime pour une vignette, jamais un réglage de
+    // répartition qu'on demanderait de faire à la main.
+    const paginationDisabled = useExportMakerPagesStore((state) => state.paginationDisabled);
+    const setPaginationDisabled = useExportMakerPagesStore((state) => state.setPaginationDisabled);
     const { pages: adaptivePages, isAdaptive: pagesAreMeasured, isMeasuring: isMeasuringPages } = useAdaptivePages(reviewData, config, {
-        enabled: noSessionPages,
+        enabled: !paginationDisabled,
     });
-    const autoPages = (noSessionPages && pagesAreMeasured) ? adaptivePages : null;
-    const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
+    const pages = (!paginationDisabled && pagesAreMeasured) ? adaptivePages : [];
     const hasMultiplePages = pages.length > 1;
     // Page UNIQUE issue de la mesure : elle porte quand même son étirement, ses colonnes et son
     // aération. Sans les transmettre au canevas simple ci-dessous, tout le travail de résorption
@@ -734,11 +722,17 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
 
     return (
         <>
-            {/* En mode autonome (pas de session Export Maker ouverte derrière ce modal), il n'existe
-                nulle part ailleurs de canvas #export-maker-canvas déjà monté à capturer — on en
-                rend un ici, hors-écran, en plus du MiniPreview visible (qui, lui, utilise un canvasId
-                distinct pour ne jamais entrer en collision avec celui-ci). */}
-            {!hasMultiplePages && isStandalone && (
+            {/* CANEVAS DE PAGE UNIQUE — monté quel que soit le point d'entrée.
+                La condition portait `&& isStandalone`, au motif qu'une session Export Maker ouverte
+                derrière ce modal fournissait déjà un `#export-maker-canvas` à capturer. Ce n'est
+                plus vrai depuis que le Studio édite le rendu ÉCRAN : sa surface s'appelle
+                `export-maker-screen-canvas` et vit à un format d'écran, pas au format du fichier.
+                Un export à page unique lancé DEPUIS le Studio ne trouvait donc plus rien à
+                photographier — mesuré le 2026-08-16 : zéro fichier produit, aucune erreur, le seul
+                canevas présent étant celui de l'aperçu miniature. Le trou existait déjà, il devient
+                simplement atteignable maintenant que « ne pas paginer » est un choix offert.
+                Le MiniPreview visible garde son propre `canvasId`, sans collision possible. */}
+            {!hasMultiplePages && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
                     {/* `interactive={false}` : cet arbre n'existe que pour être photographié. */}
                     <TemplateRenderer
@@ -979,6 +973,50 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                     automatiquement — les blocs sont mesurés puis répartis selon la place réelle.
                                 </p>
                             </div>
+
+                            {/* ── PAGINATION ──
+                                Elle vit ici depuis le 2026-08-16, avec le format, et pour la même
+                                raison : elle ne concerne QUE le fichier. Ce n'est pas une trame à
+                                composer — c'est un résultat de mesure qu'on affiche, plus un refus
+                                qu'on autorise. Composer les pages à la main était l'ancien réglage,
+                                et il remplaçait silencieusement la mesure par une trame devinée. */}
+                            {isTemplatePaginable(config.template) && (
+                                <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                Répartition en pages
+                                            </h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                {paginationDisabled
+                                                    ? 'Désactivée — tout sur une seule page, ce qui dépasse sera coupé'
+                                                    : isMeasuringPages
+                                                        ? 'Mesure du contenu en cours…'
+                                                        : pages.length > 1
+                                                            ? `${pages.length} pages — réparties selon la hauteur réelle des blocs`
+                                                            : 'Une seule page suffit pour ce contenu'}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={!paginationDisabled}
+                                            onClick={() => setPaginationDisabled(!paginationDisabled)}
+                                            className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${paginationDisabled ? 'bg-gray-300 dark:bg-gray-700' : 'bg-purple-600'}`}
+                                            title={paginationDisabled ? 'Réactiver la répartition en pages' : 'Tout garder sur une seule page'}
+                                        >
+                                            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${paginationDisabled ? 'left-0.5' : 'left-[1.375rem]'}`} />
+                                        </button>
+                                    </div>
+                                    {paginationDisabled && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                                            Un canevas a une hauteur fixe : sans répartition, le contenu qui
+                                            dépasse n&apos;est pas reporté, il disparaît du fichier.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Format selection */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">

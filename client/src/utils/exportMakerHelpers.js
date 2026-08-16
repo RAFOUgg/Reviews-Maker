@@ -289,6 +289,36 @@ export function getImageRenderStyle(image) {
     return style;
 }
 
+/**
+ * Documents joints à une review (certificats d'analyse), dans l'ordre où on les lit.
+ *
+ * Ces fichiers sont téléversés depuis `AnalyticsSection.jsx` et stockés en `/images/<fichier>` par
+ * les routes de review — ils existaient donc en base, étaient proposés à l'envoi, et n'étaient
+ * rendus NULLE PART : les templates écrivaient « Disponible » dans une cellule de tableau, sans
+ * jamais donner le moyen d'atteindre la pièce. C'est le même défaut que celui déjà corrigé pour les
+ * vidéos d'étape (cf. `MediaFrame`), sur la donnée la plus opposable d'une fiche de traçabilité.
+ *
+ * Les deux clés sont celles du registre (`fieldRegistry.js`, groupe `lab`) : `labReportUrl` et
+ * `terpeneFileUrl`. Elles sont renvoyées telles quelles comme `moduleKey` pour que l'appelant les
+ * filtre avec SON `isModuleOn` — la sémantique opt-out du rendu n'a pas à être recopiée ici, c'est
+ * exactement le genre de duplication qui a déjà produit six vocabulaires divergents dans ce module.
+ */
+export const REVIEW_DOCUMENTS = [
+    { moduleKey: 'labReportUrl', source: 'labReportUrl', label: "Certificat d'analyse" },
+    { moduleKey: 'terpeneFileUrl', source: 'terpeneFileUrl', label: 'Profil terpénique' },
+];
+
+export function collectReviewDocuments(reviewData) {
+    if (!reviewData) return [];
+    const extra = asObject(reviewData.extraData);
+    return REVIEW_DOCUMENTS
+        .map(({ moduleKey, source, label }) => {
+            const url = reviewData[source] || extra[source];
+            return typeof url === 'string' && url.trim() ? { moduleKey, label, url: url.trim() } : null;
+        })
+        .filter(Boolean);
+}
+
 export const MIN_FONT_PX = 12;
 
 /**

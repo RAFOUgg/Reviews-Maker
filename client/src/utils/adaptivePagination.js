@@ -26,6 +26,7 @@ export const MODULE_META = {
     sensoryRadar: { label: 'Empreinte sensorielle', icon: '🕸️' },
     aromaticProfile: { label: 'Profil aromatique', icon: '🌸' },
     labData: { label: 'Données laboratoire & curing', icon: '🔬' },
+    documents: { label: 'Documents & certificats', icon: '📎' },
     description: { label: 'Commentaire', icon: '💬' },
     cultureStats: { label: 'Statistiques de culture', icon: '📈' },
     genealogyCanvas: { label: 'Généalogie', icon: '🧬' },
@@ -195,6 +196,8 @@ const MODULE_GROUPS = {
     thcCbdMini: 'chemistry',
     aromaticProfile: 'chemistry',
     labData: 'chemistry',
+    // Le certificat se lit avec les données qu'il atteste, jamais en annexe.
+    documents: 'chemistry',
     // Production — d'où il vient et comment il a été fait.
     description: 'production',
     cultureStats: 'production',

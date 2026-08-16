@@ -33,10 +33,10 @@ const expect = (label, ok, detail) => {
     if (!ok) failures++;
 };
 
-const { id: reviewId, chainId, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'nominal');
-console.log('fixture', reviewId, '· chaîne', chainId || 'AUCUNE');
-if (!chainId) {
-    console.error('✖ fixture sans chaîne : la sonde ne mesurerait rien.');
+const { id: reviewId, chainId, treeId, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'nominal');
+console.log('fixture', reviewId, '· chaîne', chainId || 'AUCUNE', '· arbre', treeId || 'AUCUN');
+if (!chainId || !treeId) {
+    console.error('✖ fixture sans chaîne ou sans arbre : la sonde ne mesurerait rien.');
     process.exit(1);
 }
 
@@ -185,7 +185,58 @@ try {
 
     expect('aucune erreur JS', errs.length === 0, errs.join(' | '));
 
-    // ── 4. Chemin de repli : presse-papiers ILLISIBLE ───────────────────────────────────────
+    // ── 4. PhenoHunt : mêmes gestes sur l'autre canevas ─────────────────────────────────────
+    // Le clic droit sur une bulle d'arbre n'ouvrait AUCUN menu (il tombait dans celui des nœuds,
+    // qui cherchait un individu portant cet id). Copier depuis l'arbre, puis y recoller.
+    console.log('\nPhenoHunt');
+    await fetch(`${API}/api/genetics/trees/${treeId}/annotations`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title: 'ZZ-AUDIT Phéno F2',
+            body: [{ label: '🏷️ Identité', group: true }, { label: 'Génération', value: 'F2' }, { label: 'Breeder', value: 'ZZ-AUDIT Seeds' }],
+            position: { x: 60, y: 380 }
+        })
+    });
+
+    await page.goto(`${BASE}/phenohunt?tree=${treeId}`, { waitUntil: 'networkidle' });
+    await page.waitForSelector('.react-flow__node', { timeout: 15000 });
+    await sleep(900);
+
+    const treeBubblesBefore = await page.locator('.chain-annotation-card').count();
+    await page.locator('.chain-annotation-card', { hasText: 'ZZ-AUDIT' }).first().click({ button: 'right' });
+    await page.waitForSelector('.context-menu', { timeout: 5000 });
+    const treeCopy = page.locator('.context-menu-item', { hasText: 'Copier les données' });
+    expect('menu contextuel de bulle disponible sur PhenoHunt', await treeCopy.count() > 0);
+    await treeCopy.first().click();
+    await sleep(800);
+
+    const treeClipboard = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n?/g, '\n');
+    expect('copie depuis l\'arbre au même format', /Phéno F2/.test(treeClipboard) && /Génération : F2/.test(treeClipboard),
+        treeClipboard.replace(/\n/g, ' ⏎ ').slice(0, 90));
+
+    const treeSpot = await page.evaluate(() => {
+        const pane = document.querySelector('.react-flow__pane');
+        const r = pane.getBoundingClientRect();
+        for (const fy of [0.9, 0.1, 0.5]) for (const fx of [0.08, 0.92, 0.5]) {
+            const x = r.x + r.width * fx, y = r.y + r.height * fy;
+            if (document.elementFromPoint(x, y) === pane) return { x, y };
+        }
+        return null;
+    });
+    await page.mouse.click(treeSpot.x, treeSpot.y, { button: 'right' });
+    await page.waitForSelector('.context-menu', { timeout: 5000 });
+    await page.locator('.context-menu-item', { hasText: 'presse-papiers' }).first().click();
+    await sleep(2000);
+
+    const treeBubblesAfter = await page.locator('.chain-annotation-card').count();
+    expect('bulle collée créée sur l\'arbre', treeBubblesAfter === treeBubblesBefore + 1,
+        `${treeBubblesBefore} → ${treeBubblesAfter}`);
+    const treePersisted = await (await fetch(`${API}/api/genetics/trees/${treeId}`)).json();
+    expect('bulle collée persistée côté serveur (arbre)',
+        (treePersisted.annotations || []).filter(a => /coll/i.test(a.sourceLabel || '')).length === 1,
+        `${(treePersisted.annotations || []).length} annotation(s) sur l'arbre`);
+
+    // ── 5. Chemin de repli : presse-papiers ILLISIBLE ───────────────────────────────────────
     // Firefox refuse `readText()` aux pages web, et l'autorisation peut être refusée ailleurs.
     // Contexte SANS permission de lecture : l'action doit alors ouvrir la modale de collage
     // manuel, pas rester sans effet.

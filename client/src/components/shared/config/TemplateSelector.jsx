@@ -2,20 +2,12 @@ import { motion } from 'framer-motion';
 import { Check, Lock } from 'lucide-react';
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
-import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
-import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
-import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
-import { isTemplatePaginable, TEMPLATE_FAMILIES } from '../../../store/exportMakerConstants';
-
-// Capacité de pagination — même source que le moteur de rendu (matrice C4), plus de liste locale.
+import { TEMPLATE_FAMILIES } from '../../../store/exportMakerConstants';
 
 export default function TemplateSelector() {
     const config = useExportMakerStore((state) => state.config);
-    const reviewData = useExportMakerStore((state) => state.reviewData);
     const setTemplate = useExportMakerStore((state) => state.setTemplate);
-    const setRatio = useExportMakerStore((state) => state.setRatio);
     const templates = useExportMakerStore((state) => state.templates);
-    const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
 
     // Gating par type de compte (2026-08-04) : amateur → Moderne Compact ; influenceur → +Blog
     // +Story ; producteur → les 5. Les templates non autorisés restent VISIBLES mais verrouillés —
@@ -25,49 +17,6 @@ export default function TemplateSelector() {
         if (templateId === 'traceabilityReport' || templateId === 'detailedCard') return 'Producteur';
         return isAmateur ? 'Influenceur' : 'Producteur';
     };
-
-    const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
-    const pagesCount = useExportMakerPagesStore((state) => state.pages.length);
-    const paginationDisabled = useExportMakerPagesStore((state) => state.paginationDisabled);
-    const setPaginationDisabled = useExportMakerPagesStore((state) => state.setPaginationDisabled);
-    const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
-    const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
-
-    const isOverflow = shouldAutoLockPagination(reviewData, config.template);
-    const isPaginationSupported = isTemplatePaginable(config.template);
-    // Auto-lock: overflow data on compact format forces pagination
-    const isPaginationLocked = isOverflow && (config.ratio === '1:1' || config.ratio === '9:16');
-
-    // L'interrupteur reflète l'état EFFECTIF (manuel OU automatique) et l'inverse dans les deux
-    // sens. Auparavant il affichait `pagesEnabled` seul : quand la pagination automatique
-    // s'appliquait, il restait ÉTEINT alors que le rendu était bel et bien paginé, et le clic
-    // était purement annulé — « le bouton de pagination n'est pas lié ».
-    const effectivePagination = !paginationDisabled && (pagesEnabled || isPaginationLocked);
-
-    const handlePaginationToggle = () => {
-        if (effectivePagination) {
-            // Éteindre : refus explicite, qui prime aussi sur l'automatique.
-            setPaginationDisabled(true);
-            if (pagesEnabled) togglePagesMode();
-            return;
-        }
-        setPaginationDisabled(false);
-        const willEnable = !pagesEnabled;
-        if (willEnable) togglePagesMode();
-        if (willEnable) {
-            loadDefaultPages(reviewData?.type, config.ratio);
-            // Switch to Pagination tab
-            setTimeout(() => setActivePanel('pagination'), 100);
-        }
-    };
-
-    const ratios = [
-        { id: '1:1', name: 'Carré (1:1)', icon: '⬜' },
-        { id: '16:9', name: 'Paysage (16:9)', icon: '▭' },
-        { id: '9:16', name: 'Portrait (9:16)', icon: '▯' },
-        { id: '4:3', name: 'Standard (4:3)', icon: '▭' },
-        { id: 'A4', name: 'A4 (Document)', icon: '📄' }
-    ];
 
     return (
         <div className="space-y-4">
@@ -166,56 +115,19 @@ export default function TemplateSelector() {
             {/* FORMAT ET PAGINATION SONT PARTIS À L'EXPORT.
                 Ils ne concernent que le FICHIER, et cet éditeur montre le rendu ÉCRAN — un document
                 continu. Les laisser ici, c'était offrir des boutons qui ne changeaient rien de
-                visible : « c'est pas au format A4 », « c'est pas en 16:9 » (2026-08-13). */}
+                visible : « c'est pas au format A4 », « c'est pas en 16:9 » (2026-08-13).
+
+                L'interrupteur de pagination a suivi le 2026-08-16, pour une raison plus forte que
+                l'absence d'effet visible : il était NUISIBLE. L'activer créait une « session de
+                pages », et `ExportModal` désactivait alors toute mesure de hauteur au profit de
+                cette trame statique — une pagination devinée remplaçait une pagination mesurée, au
+                moment précis où l'utilisateur croyait soigner sa mise en page. La pagination est
+                désormais calculée à l'export, à partir de la hauteur réelle du contenu. */}
             <p className="text-[11px] text-white/40 leading-snug">
-                Le format du fichier (carré, paysage, A4…) et la mise en page se choisissent au moment
-                d&apos;exporter. Ici, vous composez la fiche telle qu&apos;elle s&apos;affiche en ligne.
+                Le format du fichier (carré, paysage, A4…) et la répartition en pages se règlent au
+                moment d&apos;exporter, où elles ont un sens. Ici, vous composez la fiche telle
+                qu&apos;elle s&apos;affiche en ligne.
             </p>
-            {/* ── PAGINATION TOGGLE ── masqué pour `traceabilityReport` : ce template est toujours
-                rendu comme un document continu (shouldAutoLockPagination l'exempte explicitement,
-                2026-08-02) — le contrôle restait affiché et fonctionnel en apparence (créait une
-                session de N pages) sans jamais varier le contenu d'une page à l'autre, un contrôle
-                trompeur plutôt qu'un vrai bug de rendu (trouvé en vérification). */}
-            {isTemplatePaginable(config.template) && (
-            <div className={`liquid-card p-4 ${isPaginationLocked ? 'ring-2 ring-amber-400/60' : pagesEnabled ? 'ring-2 ring-indigo-400/60' : ''}`}>
-                <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-bold text-white/90">
-                                Pagination
-                            </span>
-                            {isPaginationLocked && (
-                                <span className="text-xs font-semibold text-amber-400 bg-amber-400/15 px-2 py-0.5 rounded-full">
-                                    🔒 Auto
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-xs text-white/50">
-                            {isPaginationLocked
-                                ? 'Données denses — pagination recommandée'
-                                : pagesEnabled
-                                    ? `${pagesCount} page(s) — voir onglet Pagination`
-                                    : 'Répartir le contenu sur plusieurs pages'}
-                        </p>
-                    </div>
-
-                    <LiquidToggle
-                        checked={effectivePagination}
-                        onChange={handlePaginationToggle}
-                        disabled={!isPaginationSupported}
-                    />
-                </div>
-
-                {/* Quick action when just enabled */}
-                {pagesEnabled && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
-                        <LiquidButton size="sm" variant="ghost" className="w-full" onClick={() => setActivePanel('pagination')}>
-                            Gérer les pages →
-                        </LiquidButton>
-                    </motion.div>
-                )}
-            </div>
-            )}
         </div>
     );
 }

@@ -26,7 +26,9 @@ import {
     TIMELINE_PIPELINES,
     getImageRenderStyle,
     orderRenderBlocks,
+    collectReviewDocuments,
 } from '../../utils/exportMakerHelpers';
+import DocumentFrame from '../export/interactive/DocumentFrame';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -247,12 +249,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
     if (isModuleOn(contentModules, 'labAccreditationStandard') && reviewData.labAccreditationStandard) labCells.push({ label: "Norme d'accréditation", value: reviewData.labAccreditationStandard });
     if (isModuleOn(contentModules, 'labAnalysisDate') && reviewData.labAnalysisDate) labCells.push({ label: "Date d'analyse", value: formatDate(reviewData.labAnalysisDate) });
-    if (isModuleOn(contentModules, 'labReportUrl') && reviewData.labReportUrl) labCells.push({ label: "Certificat d'analyse", value: 'Disponible', status: 'ok' });
-    if (isModuleOn(contentModules, 'terpeneFileUrl') && reviewData.terpeneFileUrl) labCells.push({ label: 'Certificat terpènes', value: 'Disponible', status: 'ok' });
+    // Les certificats ne sont PLUS annoncés ici par un « Disponible » : ils sont rendus tels quels
+    // dans la section « Documents & certificats » ci-dessous (`collectReviewDocuments`). Une cellule
+    // qui dit qu'une pièce existe sans donner le moyen de l'atteindre est un doublon appauvri du
+    // bloc qui la montre — même arbitrage que le doublon « Caractéristiques détaillées » retiré le
+    // 2026-08-14.
     if (reviewData.curingType) labCells.push({ label: 'Type de curing', value: reviewData.curingType });
     if (reviewData.curingTemperature != null) labCells.push({ label: 'Température curing', value: reviewData.curingTemperature, unit: '°C' });
     if (reviewData.curingHumidity != null) labCells.push({ label: 'Humidité curing', value: reviewData.curingHumidity, unit: '%' });
     if (reviewData.curingDuration) labCells.push({ label: 'Durée curing', value: reviewData.curingDuration });
+
+    // ── Documents joints (certificats) ─────────────────────────────────────────────────────
+    // Filtrés avec `isModuleOn` (opt-out), comme tout le reste — le collecteur renvoie la clé de
+    // registre, il n'applique pas la sémantique d'affichage lui-même.
+    const documents = collectReviewDocuments(reviewData)
+        .filter((d) => isModuleOn(contentModules, d.moduleKey));
 
     // ── Composants locaux ──────────────────────────────────────────────────────────────────
 
@@ -512,7 +523,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         contentModules.type && reviewData.type && { label: 'Type', value: reviewData.type },
         contentModules.consumptionMethod !== false && reviewData.consumptionMethod && { label: 'Consommation', value: reviewData.consumptionMethod },
         reviewData.labAccredited !== undefined && reviewData.labAccredited !== null && { label: 'Labo accrédité', value: reviewData.labAccredited ? 'Oui' : 'Non', status: reviewData.labAccredited ? 'ok' : 'warn' },
-        { label: 'Certificat', value: reviewData.labReportUrl ? 'Disponible' : 'Non disponible', status: reviewData.labReportUrl ? 'ok' : 'warn' },
+        // Le certificat n'est signalé ici que par son ABSENCE — une information que le bloc
+        // « Documents & certificats » ne peut pas porter, puisqu'il ne se rend que s'il y a une
+        // pièce. Quand la pièce existe, elle est rendue plus bas : l'annoncer « Disponible » ici en
+        // plus ne serait qu'un doublon appauvri, celui-là même qu'on vient de retirer du tableau
+        // labo. On garde donc le signal, on retire la redondance.
+        !reviewData.labReportUrl && { label: 'Certificat', value: 'Non disponible', status: 'warn' },
     ].filter(Boolean);
 
     const stacked = isPortrait || isSquare;
@@ -815,6 +831,33 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     <Section icon="🔬" title="Données laboratoire & curing" moduleId="labData">
                         <div className="grid" style={{ gridTemplateColumns: `repeat(${stacked ? Math.min(2, grid.cols) : grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
                             {labCells.map((c, i) => <DataCell key={i} {...c} />)}
+                        </div>
+                    </Section>
+                )}
+
+                {/* ── DOCUMENTS JOINTS ──
+                    Les certificats réellement téléversés depuis le formulaire. Ils n'étaient jusqu'ici
+                    QUE mentionnés (« Disponible » dans le tableau labo), jamais rendus ni atteignables.
+                    Sur une surface figée, `DocumentFrame` remplace le lien mort par un QR — un
+                    certificat imprimé qu'on ne peut pas vérifier ne vaut pas mieux qu'une affirmation. */}
+                {documents.length > 0 && (
+                    <Section icon="📎" title="Documents & certificats" moduleId="documents">
+                        <div className="grid" style={{
+                            gridTemplateColumns: `repeat(${stacked ? 1 : Math.min(2, grid.cols)}, 1fr)`,
+                            gap: spacing.element,
+                        }}>
+                            {documents.map((d) => (
+                                <DocumentFrame
+                                    key={d.moduleKey}
+                                    doc={d}
+                                    accent={accent}
+                                    textPrimary={textPrimary}
+                                    textSecondary={textSecondary}
+                                    surface={surface}
+                                    border={line}
+                                    fontSize={fontSize.text}
+                                />
+                            ))}
                         </div>
                     </Section>
                 )}

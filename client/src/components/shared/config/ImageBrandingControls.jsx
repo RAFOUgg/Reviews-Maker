@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 import { Check, Folder } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
@@ -6,6 +7,36 @@ import { LiquidButton, LiquidInput, LiquidToggle } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
 import { GALLERY_MAX_IMAGES } from '../../../utils/exportMakerHelpers';
+import { isVideoMedia } from '../../../utils/mediaFileHelpers';
+
+/**
+ * Vignette d'un média du rendu — photo OU vidéo.
+ *
+ * `reviewData.images` porte les deux (le formulaire accepte les deux, et `MediaFrame` les distingue
+ * partout ailleurs) ; ce panneau les passait tous à une balise `<img>`, donc toute vidéo retenue
+ * s'affichait ici en image cassée — le seul endroit d'où l'on choisit ce qui entre dans la fiche.
+ *
+ * Pas de `MediaFrame` ici, volontairement : il monterait un `<video autoPlay>` par vignette, soit
+ * jusqu'à quatre lectures simultanées dans une grille de 68 px. Une vidéo se RECONNAÎT ici, elle se
+ * REGARDE dans le rendu.
+ */
+function MediaVignette({ media, alt }) {
+    const url = resolveImageUrl(media?.url || media);
+    if (isVideoMedia(media)) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 bg-black/60 text-white/80">
+                <span className="text-base leading-none">▶</span>
+                <span className="text-[8px] font-semibold tracking-wide">VIDÉO</span>
+            </div>
+        );
+    }
+    return <img src={url} alt={alt} className="w-full h-full object-cover" />;
+}
+
+MediaVignette.propTypes = {
+    media: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    alt: PropTypes.string,
+};
 
 const IMAGE_FILTERS = [
     { id: 'none', name: 'Aucun', preview: '🎨' },
@@ -92,12 +123,12 @@ export default function ImageBrandingControls() {
             {/* Section Image */}
             <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-white/90">
-                    Images du produit
+                    Médias du produit
                 </h4>
 
                 {availableImages.length === 0 && (
                     <p className="text-xs text-white/40 italic">
-                        Aucune photo disponible — ajoutez des photos produit dans le formulaire.
+                        Aucun média disponible — ajoutez des photos ou vidéos produit dans le formulaire.
                     </p>
                 )}
 
@@ -109,9 +140,9 @@ export default function ImageBrandingControls() {
                     dans le rendu, l'étoile désigne laquelle sert de photo principale. */}
                 {availableImages.length === 1 && (
                     <div className="relative w-full h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg shadow-purple-500/20">
-                        <img src={resolveImageUrl(availableImages[0])} alt="Photo produit" className="w-full h-full object-cover" />
+                        <MediaVignette media={availableImages[0]} alt="Média produit" />
                         <div className="absolute inset-0 bg-purple-500/10 flex items-end justify-end p-2">
-                            <span className="text-xs text-white/80 bg-black/40 px-2 py-0.5 rounded-full">Seule photo</span>
+                            <span className="text-xs text-white/80 bg-black/40 px-2 py-0.5 rounded-full">Seul média</span>
                         </div>
                     </div>
                 )}
@@ -119,7 +150,7 @@ export default function ImageBrandingControls() {
                 {availableImages.length > 1 && (
                     <div className="liquid-card p-3">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="text-sm font-medium text-white/90">Photos du rendu</div>
+                            <div className="text-sm font-medium text-white/90">Médias du rendu</div>
                             <button
                                 onClick={() => updateImage({ selected: [] })}
                                 className="text-xs px-2 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white"
@@ -128,7 +159,7 @@ export default function ImageBrandingControls() {
                             </button>
                         </div>
                         <div className="text-xs text-white/50 mb-3">
-                            {shownCount} sur {availableImages.length} retenues · clic pour retirer, ⭐ pour la photo principale
+                            {shownCount} sur {availableImages.length} retenus · clic pour retirer, ⭐ pour le média principal
                         </div>
                         <div className="flex gap-2 flex-wrap">
                             {availableImages.map((imgUrl, idx) => (
@@ -143,7 +174,7 @@ export default function ImageBrandingControls() {
                                             : 'border-white/15 opacity-35 hover:opacity-70'}`}
                                         style={{ width: '68px', height: '68px' }}
                                     >
-                                        <img src={resolveImageUrl(imgUrl)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <MediaVignette media={imgUrl} alt={`Média ${idx + 1}`} />
                                         {isShown(idx) && selectedIdx !== idx && (
                                             <span className="absolute bottom-0.5 right-0.5 bg-emerald-500 rounded-full p-0.5">
                                                 <Check className="w-3 h-3 text-white" strokeWidth={3} />
@@ -180,7 +211,7 @@ export default function ImageBrandingControls() {
                 {availableImages.length > 1 && (
                     <div className="liquid-card flex items-center justify-between p-3">
                         <div>
-                            <div className="text-sm font-medium text-white/90">Galerie photos</div>
+                            <div className="text-sm font-medium text-white/90">Galerie</div>
                             {/* Dire le PLAFOND, pas une promesse que le rendu ne tient pas.
                                 Le texte annonçait « Les N photos retenues apparaissent dans le
                                 rendu » quel que soit N, alors que les templates s'arrêtaient à 2, 3
@@ -190,9 +221,9 @@ export default function ImageBrandingControls() {
                             <div className="text-xs text-white/50">
                                 {config.image?.showGallery
                                     ? (shownCount > GALLERY_MAX_IMAGES
-                                        ? `Les ${GALLERY_MAX_IMAGES} premières des ${shownCount} photos retenues apparaissent — au-delà, les vignettes deviennent illisibles`
-                                        : `Les ${shownCount} photos retenues apparaissent dans le rendu`)
-                                    : 'Seule la photo principale apparaît dans le rendu'}
+                                        ? `Les ${GALLERY_MAX_IMAGES} premiers des ${shownCount} médias retenus apparaissent — au-delà, les vignettes deviennent illisibles`
+                                        : `Les ${shownCount} médias retenus apparaissent dans le rendu`)
+                                    : 'Seul le média principal apparaît dans le rendu'}
                             </div>
                         </div>
                         <LiquidToggle checked={!!config.image?.showGallery} onChange={(v) => updateImage({ showGallery: v })} size="sm" />

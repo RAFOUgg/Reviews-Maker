@@ -1389,6 +1389,13 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     z-index: 1000;
     min-width: 150px;
+    /* Largeur sur le contenu, et bornée. Sans `width`, ce menu `position: fixed` se dimensionnait
+       « au plus large possible » : ses boutons sont en `width: 100%`, un pourcentage qui dépend de
+       la largeur du parent alors que celle-ci dépend justement du contenu — Chrome tranchait cette
+       dépendance circulaire par une largeur démesurée (mesuré : 992px pour un menu dont le libellé
+       le plus long fait ~300px). D'où ces bandeaux beaucoup trop larges sur les deux canevas. */
+    width: max-content;
+    max-width: min(360px, calc(100vw - 16px));
     backdrop-filter: blur(10px);
 }
 

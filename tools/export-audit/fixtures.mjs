@@ -274,6 +274,21 @@ export async function createFixture(baseApi, type, density, extra = {}) {
     if (extra.withVideo) {
         fd.append('images', new Blob([Buffer.from('ftypisom')], { type: 'video/mp4' }), 'audit-clip.mp4');
     }
+    // DOCUMENTS JOINTS — `withDocs: true`. Quatrième angle mort de la même famille que la photo puis
+    // les deux vidéos : aucune fixture ne portait de CERTIFICAT, alors que `AnalyticsSection.jsx`
+    // les téléverse réellement et que les 4 routes déclarent les champs `certificateFile`/
+    // `terpeneFile`. Le cas n'était donc jamais exercé — et il était cassé partout : les templates
+    // se contentaient d'écrire « Disponible » dans une cellule, sans jamais rendre la pièce ni
+    // donner le moyen de l'atteindre.
+    //
+    // On passe par la VRAIE voie de téléversement (un fichier dans le FormData), pas par une URL
+    // injectée en chaîne : c'est le chemin que suit un utilisateur, et lui seul prouve que la
+    // colonne est bien peuplée. Le contenu n'a pas besoin d'être un PDF lisible — la sonde mesure
+    // quel bloc est rendu pour ce document, pas un affichage de PDF ; c'est l'extension qui décide.
+    if (extra.withDocs) {
+        fd.append('certificateFile', new Blob([Buffer.from('%PDF-1.4 audit')], { type: 'application/pdf' }), 'audit-coa.pdf');
+        fd.append('terpeneFile', new Blob([Buffer.from('%PDF-1.4 audit')], { type: 'application/pdf' }), 'audit-terpenes.pdf');
+    }
     const res = await fetch(`${baseApi}/api/${ENDPOINT[type]}`, { method: 'POST', body: fd });
     if (!res.ok) throw new Error(`Création ${type}/${density} : HTTP ${res.status} — ${(await res.text()).slice(0, 200)}`);
     const json = await res.json();
@@ -350,10 +365,13 @@ export async function createGeneticTree(baseApi, label = 'audit') {
  * Retourne `{ id, treeId, chainId, upstreamId }`. `upstreamId` est une VRAIE review : l'appelant
  * doit la supprimer au nettoyage comme la principale.
  */
-export async function createFixtureWithCanvases(baseApi, type, density) {
+export async function createFixtureWithCanvases(baseApi, type, density, extra = {}) {
     // L'arbre d'abord : son id doit voyager dans le corps de création de la review.
     const treeId = type === 'flower' ? await createGeneticTree(baseApi, `${type}/${density}`) : null;
-    const id = await createFixture(baseApi, type, density, treeId ? { geneticTreeId: treeId } : {});
+    // `extra` transmis (ajouté 2026-08-16) : sans lui, une sonde ne pouvait pas demander `isPublic`
+    // par ce helper, donc pas atteindre le Studio — `/edit/:type/:id` répond 403 sur une review
+    // créée sans session. `png-check` croyait mesurer le template demandé et mesurait le défaut.
+    const id = await createFixture(baseApi, type, density, { ...extra, ...(treeId ? { geneticTreeId: treeId } : {}) });
     const { chainId, upstreamId } = await attachCanvases(baseApi, id, type);
     return { id, treeId, chainId, upstreamId };
 }

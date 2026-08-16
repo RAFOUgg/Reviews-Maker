@@ -1,108 +1,40 @@
 /**
  * ChainAnnotationContextMenu Component
  *
- * Menu contextuel (clic droit) pour une carte épinglée (ChainAnnotation) du canvas — accès
- * direct à la fiche technique d'origine, copie des données affichées, détachement de sa cible
- * (nodeId/edgeId) ou suppression. Même moule que ChainNodeContextMenu.jsx/ChainEdgeContextMenu.jsx
- * (positionnement recalé anti-débordement, fermeture au clic extérieur, classe `.context-menu`
- * partagée).
+ * Adaptateur : branche le menu contextuel de carte épinglée PARTAGÉ
+ * (graph-canvas/AnnotationContextMenu.jsx — positionnement anti-débordement, fermeture au clic
+ * extérieur, copie recollable) sur le store de la Chaîne de production.
+ *
+ * Le rendu vivait ici en entier ; il a été sorti pour que PhenoHunt en dispose aussi — le clic
+ * droit sur une bulle n'y ouvrait rien du tout.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Copy, ExternalLink, Unlink, Trash2 } from 'lucide-react';
+import AnnotationContextMenu from '../graph-canvas/AnnotationContextMenu';
 import useProductionChainStore from '../../store/useProductionChainStore';
-import { bubbleToText } from '../../utils/graphDataBubble';
 
 const ChainAnnotationContextMenu = ({ annotationId, x, y, onClose }) => {
     const store = useProductionChainStore();
     const navigate = useNavigate();
-    const menuRef = useRef(null);
-    const [pos, setPos] = useState({ left: x, top: y });
-    const [copied, setCopied] = useState(false);
-
-    useEffect(() => {
-        const el = menuRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const margin = 8;
-        let left = x;
-        let top = y;
-        if (left + rect.width > window.innerWidth - margin) left = Math.max(margin, window.innerWidth - rect.width - margin);
-        if (top + rect.height > window.innerHeight - margin) top = Math.max(margin, window.innerHeight - rect.height - margin);
-        setPos({ left, top });
-    }, [x, y]);
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                onClose();
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [onClose]);
 
     const annotation = store.annotations.find(a => a.id === annotationId);
     if (!annotation) return null;
 
-    const body = Array.isArray(annotation.body) ? annotation.body : [];
-    const hasTarget = !!(annotation.nodeId || annotation.edgeId);
     const hasSourceReview = !!(annotation.sourceReviewId && annotation.sourceReviewType);
 
-    const handleCopy = async () => {
-        // Mise en forme partagée avec `parsePastedBubble` (graphDataBubble.js) : ce texte n'est plus
-        // seulement lisible, il est RECOLLABLE en bulle — les deux sens doivent donc parler la même
-        // langue, sous peine de recréer le défaut de vocabulaire dupliqué du dépôt.
-        const text = bubbleToText({ title: annotation.title, body });
-        try {
-            await navigator.clipboard.writeText(text);
-            setCopied(true);
-            setTimeout(onClose, 500);
-        } catch {
-            onClose();
-        }
-    };
-
-    const handleGoToReview = () => {
-        onClose();
-        navigate(`/edit/${annotation.sourceReviewType}/${annotation.sourceReviewId}`);
-    };
-
-    const handleDetach = () => {
-        store.updateAnnotation(annotationId, { nodeId: null, edgeId: null });
-        onClose();
-    };
-
-    const handleDelete = () => {
-        store.deleteAnnotation(annotationId);
-        onClose();
-    };
-
     return (
-        <div ref={menuRef} className="context-menu" style={{ left: `${pos.left}px`, top: `${pos.top}px` }}>
-            {hasSourceReview && (
-                <button className="context-menu-item" onClick={handleGoToReview}>
-                    <ExternalLink size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                    Aller à la fiche technique
-                </button>
-            )}
-            <button className="context-menu-item" onClick={handleCopy}>
-                <Copy size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                {copied ? 'Copié !' : 'Copier les données'}
-            </button>
-            {hasTarget && (
-                <button className="context-menu-item" onClick={handleDetach}>
-                    <Unlink size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                    Détacher (rendre libre)
-                </button>
-            )}
-            <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
-            <button className="context-menu-item danger" onClick={handleDelete}>
-                <Trash2 size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                Supprimer la carte
-            </button>
-        </div>
+        <AnnotationContextMenu
+            annotation={annotation}
+            x={x}
+            y={y}
+            onClose={onClose}
+            onGoToReview={hasSourceReview
+                ? () => navigate(`/edit/${annotation.sourceReviewType}/${annotation.sourceReviewId}`)
+                : null}
+            onDetach={() => store.updateAnnotation(annotationId, { nodeId: null, edgeId: null })}
+            onDelete={() => store.deleteAnnotation(annotationId)}
+        />
     );
 };
 

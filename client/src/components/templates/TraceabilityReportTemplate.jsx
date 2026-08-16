@@ -14,7 +14,9 @@ import {
     getImageRenderStyle,
     getSelectedImages,
     getGalleryImages,
+    collectReviewDocuments,
 } from '../../utils/exportMakerHelpers';
+import DocumentFrame from '../export/interactive/DocumentFrame';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { useDocumentSeal, formatIssuedAt } from '../../hooks/useDocumentSeal';
@@ -173,9 +175,12 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
         (reviewData.labAccredited !== undefined && reviewData.labAccredited !== null) && { label: 'Accrédité', value: reviewData.labAccredited ? 'Oui' : 'Non' },
         reviewData.labAccreditationStandard && { label: "Norme d'accréditation", value: reviewData.labAccreditationStandard },
         reviewData.labAnalysisDate && { label: "Date d'analyse", value: formatDate(reviewData.labAnalysisDate) },
-        reviewData.labReportUrl && { label: "Certificat d'analyse", value: 'Disponible' },
-        reviewData.terpeneFileUrl && { label: 'Certificat terpènes', value: 'Disponible' },
+        // Les certificats sont RENDUS (section « Documents & certificats » plus bas), plus annoncés
+        // par un « Disponible » qui ne menait nulle part — sur un rapport de traçabilité, la pièce
+        // justificative est précisément ce qu'on vient chercher.
     ].filter(Boolean);
+
+    const documents = collectReviewDocuments(reviewData);
 
     // Délègue à `TemplateSection.jsx` (partagé avec `DetailedCardTemplate.jsx`, qui définissait
     // l'original) — props ajustées pour préserver le rendu exact déjà en place ici (fontWeight 700,
@@ -339,6 +344,27 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                                 <div style={{ fontSize: `${readableFontSize(fontSize.small - 2)}px`, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c.label}</div>
                                 <div style={{ fontSize: `${fontSize.text}px`, fontWeight: 700, color: colors.textPrimary }}>{c.value}</div>
                             </div>
+                        ))}
+                    </div>
+                </Section>
+            )}
+
+            {/* Documents joints — les certificats réellement téléversés, atteignables (lien à
+                l'écran, QR sur un fichier figé) plutôt que simplement mentionnés. */}
+            {documents.length > 0 && (
+                <Section moduleId="documents" title="Documents & certificats" icon="📎">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+                        {documents.map((d) => (
+                            <DocumentFrame
+                                key={d.moduleKey}
+                                doc={d}
+                                accent={colors.accent}
+                                textPrimary={colors.textPrimary}
+                                textSecondary={colors.textSecondary}
+                                surface={colorWithOpacity(colors.accent, 6)}
+                                border={colorWithOpacity(colors.accent, 25)}
+                                fontSize={fontSize.text}
+                            />
                         ))}
                     </div>
                 </Section>

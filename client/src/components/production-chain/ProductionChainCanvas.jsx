@@ -1030,29 +1030,43 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
         const items = [
             ...(store.nodes || []).map(n => ({ id: n.id, kind: 'node', position: n.position, ...sizeOf(n.id) })),
-            ...(store.annotations || []).map(a => ({ id: a.id, kind: 'annotation', position: a.position, ...sizeOf(a.id) }))
+            ...(store.annotations || []).map(a => ({
+                id: a.id,
+                kind: 'annotation',
+                position: a.position,
+                // Ordre de la TRAME du pipeline d'origine (type + horodatage de la cellule
+                // épinglée, cf. processCellDrop) : deux bulles d'un même produit se rangent dans
+                // l'ordre où leurs étapes ont eu lieu — « Culture Phase 2 » avant « Phase 6 » —,
+                // pas dans l'ordre où elles ont été épinglées.
+                sortKey: [a.pipelineType || '', a.cellTimestamp ?? ''].join('|'),
+                ...sizeOf(a.id)
+            }))
         ];
         if (items.length === 0) {
             toast.info('Rien à réarranger — le canevas est vide.');
             return;
         }
 
-        // Liaisons de transformation (orientées, elles donnent le sens de lecture) + rattachement
-        // d'une bulle épinglée à son élément (non orienté) : une bulle doit rester à côté de ce
-        // qu'elle documente, exactement comme le trait pointillé le montre déjà.
+        // Liaisons de transformation : ORIENTÉES, ce sont elles qui donnent le sens de lecture
+        // (amont → aval). Rattachement d'une bulle à son élément : `satellite`, la bulle se pose à
+        // côté de ce qu'elle documente. Rien d'autre n'est déduit — aucune liaison n'est créée
+        // entre deux éléments qui n'en ont pas déjà une.
         const links = [
             ...(store.edges || []).map(e => ({
                 source: e.sourceId ?? e.sourceNodeId,
-                target: e.targetId ?? e.targetNodeId
+                target: e.targetId ?? e.targetNodeId,
+                kind: 'flow'
             })),
             ...(store.annotations || []).map(a => {
                 const anchorEdge = a.edgeId ? store.edges.find(e => e.id === a.edgeId) : null;
                 const anchorId = a.nodeId || (anchorEdge ? (anchorEdge.sourceId ?? anchorEdge.sourceNodeId) : null);
-                return anchorId ? { source: anchorId, target: a.id, directed: false } : null;
+                return anchorId ? { source: anchorId, target: a.id, kind: 'satellite' } : null;
             }).filter(Boolean)
         ].filter(l => l.source && l.target);
 
-        const { positions } = computeGridArrangement(items, links);
+        // Flux horizontal : une chaîne de production se lit de l'amont vers l'aval, de gauche à
+        // droite (les accroches de liaison gauche/droite du canevas suivent déjà cette convention).
+        const { positions } = computeGridArrangement(items, links, { orientation: 'horizontal' });
 
         const moved = items.filter(item => {
             const next = positions.get(item.id);

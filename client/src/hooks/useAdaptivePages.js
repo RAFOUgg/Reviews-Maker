@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { getDefaultPages } from '../store/exportMakerPagesStore';
 import { TEMPLATE_PAGINATION } from '../store/exportMakerConstants';
 import { shouldAutoLockPagination, getResponsiveAdjustments, getTemplateColumns } from '../utils/exportMakerHelpers';
 import { computeAdaptivePages } from '../utils/adaptivePagination';
@@ -45,11 +44,12 @@ function getCachedMeasurement(cacheKey, reviewData, config) {
 /**
  * Pagination adaptative : mesure réellement la hauteur rendue de chaque bloc du template puis les
  * répartit en pages selon le budget de hauteur du ratio (voir `adaptivePagination.js` +
- * `measureDetailedCardModules.jsx`) — remplace le lookup statique `PAGE_TEMPLATES` pour
- * `detailedCard`. Pendant la mesure (~700ms, images/canevas à stabiliser) et si la mesure
- * échoue/donne un résultat inutilisable, retombe sur `getDefaultPages` (statique) pour ne jamais
- * laisser un export vide/blanc en attendant. Mode Custom explicitement EXEMPT (mise en page déjà
- * choisie à la main par l'utilisateur — un reflow automatique irait à l'encontre de son intention).
+ * `measureDetailedCardModules.jsx`). Depuis le 2026-08-16, c'est la SEULE source de pagination :
+ * le lookup statique `PAGE_TEMPLATES` a été supprimé, avec l'UI qui permettait de composer une
+ * trame à la main. Pendant la mesure (~700 ms, images/canevas à stabiliser) et si elle échoue,
+ * aucune page n'est proposée — le rendu retombe sur un canevas unique et l'export reste désactivé
+ * (`isMeasuring`), plutôt que sur un gabarit deviné. Mode Custom explicitement EXEMPT (mise en page
+ * déjà choisie à la main par l'utilisateur — un reflow automatique irait contre son intention).
  *
  * @param {Object} reviewData - reviewData BRUT (pré-adaptateur, même contrat que shouldAutoLockPagination)
  * @param {Object} config - config Export Maker courante
@@ -57,16 +57,24 @@ function getCachedMeasurement(cacheKey, reviewData, config) {
  * @param {boolean} [options.enabled=true] - permet à l'appelant de désactiver le calcul (ex. pagination pas active)
  * @returns {{ pages: Array, isAdaptive: boolean, isMeasuring: boolean }}
  *
- * `isMeasuring` (2026-08-05) : vrai tant que la mesure est en cours. Le hook pose immédiatement
- * un repli STATIQUE (`getDefaultPages`) pour qu'un export déclenché tout de suite ne soit jamais
- * vide — mais ce repli est presque toujours FAUX, et le remplacer ~2 s plus tard produisait un
- * reflow visible : l'aperçu affichait « 1/5 » puis basculait à « 1/8 » avec un contenu différent.
- * Les consommateurs qui AFFICHENT (aperçu Studio) doivent attendre `isMeasuring === false` plutôt
- * que de montrer une mise en page qu'on sait provisoire ; ceux qui EXPORTENT gardent le repli.
+ * `isMeasuring` (2026-08-05) : vrai tant que la mesure est en cours. Les consommateurs qui
+ * AFFICHENT (aperçu Studio) doivent l'attendre plutôt que de montrer une mise en page provisoire —
+ * sinon l'aperçu affiche « 1/5 » puis bascule à « 1/8 » avec un contenu différent. Ceux qui
+ * EXPORTENT doivent en faire une condition BLOQUANTE : exporter pendant la mesure produirait un
+ * fichier dont la découpe n'est pas celle qu'on vient de montrer.
  */
 export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
+    // Départ SANS pages, jamais sur un repli statique.
+    //
+    // Le repli était `getDefaultPages` — un gabarit deviné dont les identifiants ne correspondent à
+    // aucun bloc réel du template. Il était censé éviter un export VIDE ; il évitait le mauvais
+    // danger. Le filtre par page ne résolvant aucun de ses ids, il laissait TOUT passer sur CHAQUE
+    // page : un export complet mais FAUX, qui part chez le client sans que rien ne le signale
+    // (mesuré le 2026-08-10 : 5 pages identiques à 98,6 %). Aucune page = un canevas unique, et le
+    // bouton Exporter reste désactivé tant que `isMeasuring` est vrai — donc jamais d'export vide
+    // non plus.
     const [state, setState] = useState(() => ({
-        pages: getDefaultPages(reviewData?.type, config?.ratio),
+        pages: [],
         isAdaptive: false,
         isMeasuring: false,
     }));
@@ -109,7 +117,7 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         // L'état est posé APRÈS avoir déterminé si une mesure va suivre : sans ça, on annonçait
         // `isMeasuring: false` avec un repli statique pendant deux secondes, exactement le reflow
         // qu'on cherche à supprimer.
-        setState({ pages: getDefaultPages(reviewData?.type, ratio), isAdaptive: false, isMeasuring: canAdapt });
+        setState({ pages: [], isAdaptive: false, isMeasuring: canAdapt });
         if (!canAdapt) return;
 
         const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${moduleOrderSignature}|${JSON.stringify(config.typography || {})}`;

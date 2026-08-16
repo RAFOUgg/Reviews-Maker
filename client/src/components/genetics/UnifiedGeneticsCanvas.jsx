@@ -19,6 +19,7 @@ import {
     useEdgesState,
     Panel,
     useReactFlow,
+    useStoreApi,
     MarkerType
 } from 'reactflow';
 import { toSvg } from 'html-to-image';
@@ -27,8 +28,10 @@ import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import CanvasInfoPanel from '../graph-canvas/CanvasInfoPanel';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
+import PasteBubbleModal from '../graph-canvas/PasteBubbleModal';
 import useGraphMultiSelection from '../graph-canvas/useGraphMultiSelection';
-import { buildGeneticsNodeBubble, buildGeneticsEdgeBubble, bubblePositionNear } from '../../utils/graphDataBubble';
+import { buildGeneticsNodeBubble, buildGeneticsEdgeBubble, bubblePositionNear, parsePastedBubble } from '../../utils/graphDataBubble';
+import { computeGridArrangement } from '../../utils/gridArrange';
 import { useToast } from '../shared/ToastContainer';
 // Store du CONTEXTE s'il existe, singleton global sinon — l'édition ne fournit aucun
 // contexte, son comportement est donc inchangé par construction.
@@ -43,6 +46,7 @@ import FamilyDropEdge from './FamilyDropEdge';
 import NodeContextMenu from './NodeContextMenu';
 import EdgeContextMenu from './EdgeContextMenu';
 import PaneContextMenu from './PaneContextMenu';
+import GeneticsAnnotationContextMenu from './GeneticsAnnotationContextMenu';
 import NodeFormModal from './NodeFormModal';
 import LinkExistingReviewModal from './LinkExistingReviewModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
@@ -98,6 +102,8 @@ const RELATIONSHIP_TYPE_LABELS = {
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = null }) => {
     const store = useGeneticsCanvasStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
+    // Tailles RÉELLEMENT mesurées des nœuds (réarrangement) — même accès que ProductionChainCanvas.
+    const rfStoreApi = useStoreApi();
     const { isMobile } = useResponsiveLayout();
     const toast = useToast();
 
@@ -111,6 +117,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
+    // Collage d'une bulle : { position, text } quand le presse-papiers n'a pas pu être lu seul.
+    const [pasteBubble, setPasteBubble] = useState(null);
     const [exportingSvg, setExportingSvg] = useState(false);
 
     // ── Recherche et filtres d'affichage ────────────────────────────────────────────────────
@@ -336,6 +344,114 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
         setShowMediaBubbleImport(false);
         return result;
     }, [store, screenToFlowPosition]);
+
+    // ── Créer une bulle à partir des informations copiées ────────────────────────────────────
+    // Même geste et même analyseur que la Chaîne de production (parsePastedBubble, l'inverse exact
+    // de « Copier les données ») : une bulle copiée sur un canevas se recolle sur l'autre.
+    const createBubbleFromParsed = useCallback(async (parsed, position) => {
+        const result = await store.addAnnotation({
+            title: parsed.title,
+            body: parsed.body,
+            sourceLabel: 'Collé depuis le presse-papiers',
+            position
+        });
+        if (result?.error) toast.error("La bulle n'a pas pu être créée");
+        else toast.success('Bulle créée depuis le presse-papiers');
+        return result;
+    }, [store, toast]);
+
+    const handlePasteBubble = useCallback(async (clientX, clientY) => {
+        if (readOnly) return;
+        const position = screenToFlowPosition({ x: clientX, y: clientY });
+        // `readText()` n'existe pas partout (refusé par Firefox aux pages web, soumis à
+        // autorisation ailleurs) : l'échec ouvre la modale de collage manuel.
+        let text = '';
+        try {
+            text = (await navigator.clipboard?.readText?.()) || '';
+        } catch {
+            text = '';
+        }
+        const parsed = text.trim() ? parsePastedBubble(text) : null;
+        if (!parsed) {
+            setPasteBubble({ position, text });
+            return;
+        }
+        await createBubbleFromParsed(parsed, position);
+    }, [readOnly, screenToFlowPosition, createBubbleFromParsed]);
+
+    // ── Réarranger l'arbre sur un quadrillage ────────────────────────────────────────────────
+    // Même moteur que la Chaîne de production (utils/gridArrange.js), avec les deux différences
+    // propres à la généalogie :
+    //   - orientation VERTICALE : une descendance se lit du haut vers le bas, pas de gauche à
+    //     droite comme une chaîne de fabrication ;
+    //   - seuls les types de relation de FILIATION (PARENT_CHILD_TYPES) donnent le sens de lecture.
+    //     « sibling » (fratrie) et « pairing » (couple parental) relient des individus de MÊME
+    //     génération : les traiter comme une filiation ferait descendre un frère d'un rang à
+    //     chaque lien, et le couple parental se retrouverait à cheval sur deux générations.
+    const handleRearrange = useCallback(async () => {
+        if (readOnly) return;
+
+        const internals = rfStoreApi.getState().nodeInternals;
+        const sizeOf = (id) => {
+            const measured = internals.get(id);
+            return { width: measured?.width || undefined, height: measured?.height || undefined };
+        };
+
+        const items = [
+            ...(store.nodes || []).map(n => ({ id: n.id, kind: 'node', position: n.position, ...sizeOf(n.id) })),
+            ...(store.annotations || []).map(a => ({ id: a.id, kind: 'annotation', position: a.position, ...sizeOf(a.id) }))
+        ];
+        if (items.length === 0) {
+            toast.info('Rien à réarranger — l\'arbre est vide.');
+            return;
+        }
+
+        const links = [
+            ...(store.edges || []).map(e => ({
+                source: e.parentNodeId,
+                target: e.childNodeId,
+                kind: PARENT_CHILD_TYPES.includes(e.relationshipType) ? 'flow' : 'peer'
+            })),
+            ...(store.annotations || []).map(a => {
+                const anchorEdge = a.edgeId ? store.edges.find(e => e.id === a.edgeId) : null;
+                const anchorId = a.nodeId || anchorEdge?.parentNodeId || null;
+                return anchorId ? { source: anchorId, target: a.id, kind: 'satellite' } : null;
+            }).filter(Boolean)
+        ].filter(l => l.source && l.target);
+
+        const { positions } = computeGridArrangement(items, links, { orientation: 'vertical' });
+
+        const moved = items.filter(item => {
+            const next = positions.get(item.id);
+            return next && (next.x !== item.position?.x || next.y !== item.position?.y);
+        });
+        if (moved.length === 0) {
+            toast.info('Les éléments sont déjà alignés.');
+            return;
+        }
+
+        setNodes(nds => nds.map(n => {
+            const next = positions.get(n.id);
+            return next ? { ...n, position: next } : n;
+        }));
+
+        // Un point de courbure glissé à la main est une coordonnée ABSOLUE du canevas : le garder
+        // enverrait la liaison faire un détour à l'ancien emplacement.
+        const curvedEdges = (store.edges || []).filter(e => e.waypointX != null || e.waypointY != null);
+
+        const results = await Promise.all([
+            ...moved.map(item => item.kind === 'annotation'
+                ? store.updateAnnotation(item.id, { position: positions.get(item.id) })
+                : store.updateNode(item.id, { position: positions.get(item.id) })),
+            ...curvedEdges.map(e => store.updateEdge(e.id, { waypointX: null, waypointY: null }))
+        ]);
+
+        const failed = results.filter(r => r?.error).length;
+        if (failed > 0) toast.warning(`Réarrangement partiel : ${failed} élément(s) n'ont pas pu être enregistrés.`);
+        else toast.success(`${moved.length} élément${moved.length > 1 ? 's' : ''} réarrangé${moved.length > 1 ? 's' : ''}`);
+
+        fitView({ padding: 0.2, duration: 400 });
+    }, [readOnly, store, rfStoreApi, setNodes, toast, fitView]);
 
     // ── Épingler les données d'un élément en bulle ──────────────────────────────────────────
     // PhenoHunt n'avait AUCUN moyen d'afficher les données d'un individu sur l'arbre : le nœud
@@ -757,6 +873,15 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
         event.preventDefault();
         event.stopPropagation();
 
+        // Une carte épinglée est un nœud React Flow, mais pas un individu : la router vers le menu
+        // des nœuds revenait à chercher un individu portant cet id, n'en trouver aucun et
+        // n'afficher AUCUN menu — copier ou détacher une bulle était donc impossible sur l'arbre.
+        if (node.type === 'annotationCard') {
+            setContextMenuType('annotation');
+            setContextMenu({ x: event.clientX, y: event.clientY, annotationId: node.id });
+            return;
+        }
+
         setContextMenuType('node');
         setContextMenu({
             x: event.clientX,
@@ -1074,12 +1199,23 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                         onPinDataBubble={handlePinEdgeDataBubble}
                     />
                 )}
+                {contextMenu && contextMenuType === 'annotation' && !readOnly && (
+                    <GeneticsAnnotationContextMenu
+                        annotationId={contextMenu.annotationId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                    />
+                )}
                 {contextMenu && contextMenuType === 'pane' && (
                     <PaneContextMenu
                         x={contextMenu.x}
                         y={contextMenu.y}
                         onClose={closeContextMenu}
                         onAddUnknownIndividual={handleAddUnknownIndividual}
+                        readOnly={readOnly}
+                        onRearrange={handleRearrange}
+                        onPasteBubble={handlePasteBubble}
                     />
                 )}
             </>}
@@ -1095,6 +1231,13 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                 )}
                 {store.linkReviewPickerNodeId && (
                     <LinkExistingReviewModal />
+                )}
+                {pasteBubble && (
+                    <PasteBubbleModal
+                        initialText={pasteBubble.text}
+                        onCreate={(parsed) => createBubbleFromParsed(parsed, pasteBubble.position)}
+                        onClose={() => setPasteBubble(null)}
+                    />
                 )}
                 {showMediaBubbleImport && (
                     <MediaBubbleImportModal onImport={handleImportMediaBubble} onClose={() => setShowMediaBubbleImport(false)} />

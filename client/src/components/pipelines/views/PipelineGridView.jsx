@@ -6,6 +6,7 @@ import { CULTURE_PHASES } from '../../../config/pipelinePhases';
 import './PipelineGridView.css';
 import { getFieldIcon } from '../../../utils/fieldIcons';
 import { summarizeCellFields } from '../../../utils/chainCellPipelines';
+import { isVideoMedia } from '../../../utils/mediaFileHelpers';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
@@ -489,10 +490,17 @@ const PipelineGridView = ({
     const getIntensityTextClass = (aUnePhoto) => ((paper && !aUnePhoto) ? 'text-slate-900' : 'text-white');
 
     /** L'étape ne porte-t-elle QUE de la vidéo (aucune photo utilisable en fond) ? */
+    //
+    // `isVideoMedia` et non `m.type !== 'video'` : le champ `type` n'existe QUE sur un upload encore
+    // en mémoire (cf. `usePhotoUpload.js`). Une entrée rechargée depuis la base n'a que son `url` —
+    // une vidéo y passait donc pour une photo, partait en `background-image` d'un `.mp4` (fond
+    // vide), et ne recevait même pas le repère ▶ puisque `videoSeule` la comptait comme photo.
+    // Autrement dit : une vidéo d'étape était visible jusqu'au premier rechargement de page, puis
+    // plus jamais. `mediaFileHelpers.js` est la source unique qui règle exactement ce cas.
     const videoSeule = (index) => {
         const media = Array.isArray(cellsMedia[index]) ? cellsMedia[index] : [];
         if (media.length === 0) return false;
-        return !media.some((m) => m && m.url && m.type !== 'video');
+        return !media.some((m) => m && m.url && !isVideoMedia(m));
     };
 
     /** Fond photo d'une case, voile de lisibilité compris. `{}` si l'étape n'a pas de média. */
@@ -500,7 +508,7 @@ const PipelineGridView = ({
         const media = Array.isArray(cellsMedia[index]) ? cellsMedia[index] : [];
         // Les vidéos ne sont pas des fonds : une balise `<video>` ne se met pas en
         // `background-image`, et un export est de toute façon une image fixe.
-        const premiere = media.find((m) => m && m.url && m.type !== 'video');
+        const premiere = media.find((m) => m && m.url && !isVideoMedia(m));
         // Une étape qui ne porte QUE de la vidéo n'avait, elle, strictement aucun signe distinctif :
         // rien ne disait qu'un média y était attaché, ni à l'écran ni dans le fichier exporté. Elle
         // reçoit donc le même fond sombre que les cases à photo — ce qui garde aussi l'encre blanche
@@ -612,7 +620,7 @@ const PipelineGridView = ({
         const hasData = fieldCount > 0;
         const subLabel = getCellSubLabel(cellIndex);
         const textClass = getIntensityTextClass((cellsMedia[cellIndex]?.length || 0) > 0);
-        const porteUneVideo = (cellsMedia[cellIndex] || []).some((m) => m && m.type === 'video');
+        const porteUneVideo = (cellsMedia[cellIndex] || []).some((m) => m && isVideoMedia(m));
 
         return (
             <div style={{ ...style, padding: 4 }} key={cellIndex}>

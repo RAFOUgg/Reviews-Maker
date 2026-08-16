@@ -8,7 +8,6 @@ import ConfigPane from '../config/ConfigPane';
 import ScreenPreviewPane from './ScreenPreviewPane';
 import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
-import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
 import { useAdaptivePages } from '../../../hooks/useAdaptivePages';
 import { isTemplatePaginable } from '../../../store/exportMakerConstants';
 
@@ -231,36 +230,25 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     const config = useExportMakerStore((state) => state.config);
     const activePreset = useExportMakerStore((state) => state.activePreset);
 
-    // Pages store
-    const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    // PAGINATION — plus aucun interrupteur ni trame manuelle ici (2026-08-16).
+    //
+    // Cet éditeur compose le rendu ÉCRAN : un document continu, sans page. La pagination ne
+    // concerne que le fichier exporté et se règle donc dans la modale d'export, avec le format.
+    // On garde néanmoins la mesure en marche ici : son résultat est mis en cache par
+    // `useAdaptivePages` et partagé avec la modale d'export, qui le trouve donc déjà prêt au lieu
+    // de rouvrir un chantier de mesure de deux secondes au moment où l'utilisateur clique.
+    //
+    // `paginationDisabled` est le seul réglage qui subsiste, et c'est un refus de l'utilisateur :
+    // le respecter ici évite de mesurer pour rien.
     const paginationDisabled = useExportMakerPagesStore((state) => state.paginationDisabled);
-    const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
-    // Aperçu live paginé même sans activation manuelle, si le contenu est dense — sans ça,
-    // l'aperçu Export Maker (la surface la plus regardée en configurant un export) coupait
-    // silencieusement tout ce qui dépassait un canevas à hauteur fixe, comme l'export autonome
-    // avant son propre correctif (2026-07-27). `loadDefaultPages` est déjà appelé
-    // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
-    // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
-    // Le contrat de pagination (matrice C4) prime sur l'interrupteur manuel. `pagesEnabled` est
-    // persistant et global à la session : activé sur Fiche Technique puis suivi d'une bascule vers
-    // Moderne Compact, il faisait paginer une CARTE — constaté en production, Compact affiché en
-    // 4/6 pages alors qu'il est déclaré non paginable. Une carte ne se pagine pas, quel que soit
-    // l'état hérité d'un autre template.
+    const setPages = useExportMakerPagesStore((state) => state.setPages);
+
     // Mêmes données que celles poussées dans le store pour les templates de fichier — l'aperçu
     // écran ne doit pas lire une 2e normalisation qui divergerait.
     const normalizedReview = useMemo(() => normalizeReviewData(reviewData), [reviewData]);
 
-    // Plus d'heuristique de densité ici (voir `useAdaptivePages.js`) : elle décrivait une FLEUR
-    // (timelines, nombre d'arômes/effets) et laissait une review Comestible dense se rendre sur une
-    // seule page à 147 % — donc contenu coupé. C'est la MESURE qui tranche désormais ; ce drapeau ne
-    // dit plus que « ce template se pagine et l'utilisateur ne l'a pas désactivé ».
     const effectivePagesActive = isTemplatePaginable(config.template) && !paginationDisabled;
 
-    // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
-    // Studio) utilisait jusqu'ici `loadDefaultPages` (statique) comme les deux autres — remplacée
-    // ici par une vraie mesure de hauteur pour `detailedCard` (voir `useAdaptivePages.js`, qui gère
-    // lui-même le repli statique pendant/à défaut de mesure).
-    const setPages = useExportMakerPagesStore((state) => state.setPages);
     // PARCOURS MOBILE (demande du 2026-08-11) : sur petit écran, afficher SOIT les réglages, SOIT
     // le rendu — jamais les deux écrasés l'un sur l'autre. Et surtout : tant qu'aucun template n'a
     // été choisi pour cette review, l'aperçu n'a rien à montrer d'utile (ce serait un rendu par
@@ -275,15 +263,13 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     }, [templateChosen]);
     const effectiveMobileView = mobileView ?? (templateChosen ? 'preview' : 'config');
 
-    const { pages: adaptivePagesResult, isAdaptive, isMeasuring } = useAdaptivePages(reviewData, config, {
+    const { pages: adaptivePagesResult, isAdaptive } = useAdaptivePages(reviewData, config, {
         enabled: effectivePagesActive,
     });
     useEffect(() => {
-        if (isAdaptive && adaptivePagesResult.length > 1) {
-            setPages(adaptivePagesResult);
-        }
-        // Sinon : les pages statiques déjà chargées par `loadDefaultPages` (effet ci-dessus) restent
-        // en place — pas de régression pendant la mesure ou si elle échoue/est non concluante.
+        // Seul un résultat MESURÉ est publié. Tant que la mesure n'a pas conclu, le store garde
+        // zéro page — ce qui veut dire « canevas unique », pas « découpe inconnue devinée ».
+        if (isAdaptive) setPages(adaptivePagesResult);
     }, [isAdaptive, adaptivePagesResult, setPages]);
 
     // Plein écran réel : superpose la Fullscreen API du navigateur au mode CSS existant
@@ -338,13 +324,8 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                     }
                 }
             }
-
-            // Charger les pages par défaut
-            if (reviewData.type && config.ratio) {
-                loadDefaultPages(reviewData.type, config.ratio);
-            }
         }
-    }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
+    }, [reviewData, setReviewData]);
 
     // Note: la pagination ne s'active plus automatiquement - l'utilisateur choisit via le toggle
 

@@ -18,7 +18,8 @@ import {
     ACCENT_TEXT_COLORS,
     getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
-import { getSelectedImages, getGalleryImages, TIMELINE_PIPELINES, orderRenderBlocks } from '../../utils/exportMakerHelpers';
+import { getSelectedImages, getGalleryImages, TIMELINE_PIPELINES, orderRenderBlocks, collectReviewDocuments } from '../../utils/exportMakerHelpers';
+import DocumentFrame from '../export/interactive/DocumentFrame';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -84,6 +85,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
+    const documents = collectReviewDocuments(reviewData);
 
     // Photos retenues par l'utilisateur (`config.image.selected`) — jamais `reviewData.images`
     // directement : sans ce filtre, décocher une photo n'avait aucun effet sur le rendu.
@@ -575,6 +577,30 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         groupIcons={GROUP_ICONS}
                     />
                 ))}
+
+                {/* Documents joints — certificats réellement téléversés. Rendus sur les trois
+                    templates de format long ; les deux CARTES (Compact, Story) les excluent, comme
+                    tout le reste du détail technique (cf. `TEMPLATE_SECTIONS`) : un certificat PDF
+                    dans une story Instagram est du bruit, pas de la traçabilité. */}
+                {isPageOn('documents') && documents.length > 0 && (
+                    <div data-module="documents" style={styles.section}>
+                        <h2 style={styles.sectionTitle}>📎 Documents & certificats</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {documents.map((d) => (
+                                <DocumentFrame
+                                    key={d.moduleKey}
+                                    doc={d}
+                                    accent={colors.accent}
+                                    textPrimary={colors.textPrimary}
+                                    textSecondary={colors.textSecondary}
+                                    surface={colorWithOpacity(colors.accent, 8)}
+                                    border={colorWithOpacity(colors.accent, 20)}
+                                    fontSize={fontSize.text}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Substrat */}
                 {isPageOn('substrat') && contentModules.substratMix && substrat.length > 0 && (

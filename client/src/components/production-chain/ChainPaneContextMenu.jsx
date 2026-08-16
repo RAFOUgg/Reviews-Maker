@@ -8,15 +8,18 @@
  * réarranger tous les éléments sur un quadrillage, importer une donnée vers plusieurs cibles.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useReactFlow } from 'reactflow';
 import { RotateCcw, Download, LayoutGrid, ClipboardPaste } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import useContextMenuPosition from '../graph-canvas/useContextMenuPosition';
 
 const ChainPaneContextMenu = ({ x, y, onClose, readOnly, onRearrange, onPasteBubble }) => {
     const { fitView } = useReactFlow();
     const store = useProductionChainStore();
-    const menuRef = useRef(null);
+    // Recalage dans la fenêtre : ce menu s'ouvre au point du clic, donc potentiellement à quelques
+    // pixels du bas du canevas — ses dernières entrées sortiraient de l'écran sans ça.
+    const [menuRef, style] = useContextMenuPosition(x, y);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -36,7 +39,7 @@ const ChainPaneContextMenu = ({ x, y, onClose, readOnly, onRearrange, onPasteBub
     };
 
     return (
-        <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
+        <div ref={menuRef} className="context-menu" style={style}>
             <button
                 className="context-menu-item"
                 onClick={() => { fitView(); onClose(); }}

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Files, Lock, Pencil } from 'lucide-react';
+import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Lock, Pencil } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidTabs } from '../../ui/LiquidUI';
 import TemplateSelector from './TemplateSelector';
@@ -8,15 +8,26 @@ import ColorPaletteControls from './ColorPaletteControls';
 import ContentModuleControls from './ContentModuleControls';
 import ImageBrandingControls from './ImageBrandingControls';
 import PresetManager from './PresetManager';
-import PageManager from '../../shared/export-maker/PageManager';
 
-// Ordre : Template en 1er (choix du gabarit), puis Contenu/Pagination en 2e/3e position — ce sont
-// les réglages qui pilotent QUOI s'affiche et OÙ, donc les plus consultés après le choix du
-// template — avant les réglages plus cosmétiques (typo/couleurs/image/préréglages).
+// Ordre : Template en 1er (choix du gabarit), puis Contenu — ce sont les réglages qui pilotent CE
+// QUI s'affiche, donc les plus consultés — avant les réglages cosmétiques (typo/couleurs/image) et
+// les préréglages.
+//
+// PLUS D'ONGLET « PAGINATION » ICI (2026-08-16). Cet éditeur compose le rendu ÉCRAN : un document
+// continu, sans page ni marge d'impression. La pagination ne concerne que le FICHIER exporté — elle
+// vit donc désormais dans la modale d'export, à côté du format, exactement comme le choix du format
+// y a été déplacé le 2026-08-13 pour la même raison.
+//
+// Ce n'était pas seulement un onglet sans effet visible : la « trame de pages » qu'il composait
+// prenait le pas sur la pagination MESURÉE au moment d'exporter (`ExportModal` désactivait tout
+// calcul dès qu'une session de pages existait), et ses gabarits statiques décrivaient leurs pages
+// avec des clés `contentModules` (`typeCulture`, `cannabinoids`…) là où le rendu attend des ids de
+// BLOCS (`masthead`, `pipeline:*`, `gisement:*`). Ajouter une page à la main produisait donc une
+// page dont le contenu ne pouvait pas être résolu — l'ExportModal documentait déjà le symptôme :
+// « 5 pages identiques remplies à 98,6 % » là où la mesure en produit 2.
 const BASE_PANELS = [
     { id: 'template', label: 'Template', icon: LayoutGrid },
     { id: 'content', label: 'Contenu', icon: ListChecks },
-    { id: 'pagination', label: 'Pagination', icon: Files },
     { id: 'typography', label: 'Typographie', icon: Type },
     { id: 'colors', label: 'Couleurs', icon: Palette },
     { id: 'image', label: 'Image & Logo', icon: ImageIcon },
@@ -78,7 +89,6 @@ export default function ConfigPane() {
                     {activePanel === 'content' && <ContentModuleControls />}
                     {activePanel === 'image' && <ImageBrandingControls />}
                     {activePanel === 'presets' && <PresetManager />}
-                    {activePanel === 'pagination' && <PageManager embedded />}
                 </motion.div>
             </div>
         </div>
