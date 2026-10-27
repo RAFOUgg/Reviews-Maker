@@ -42,8 +42,10 @@ const verificationDocUpload = multer({
     }),
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-        const allowed = /jpeg|jpg|png|pdf/;
-        const ok = allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype);
+        // Ancrées : la regex non ancrée acceptait n'importe quelle extension contenant « jpg »
+        // (ex. `.jpghtml`), le type MIME étant de toute façon déclaré par le client.
+        const ext = path.extname(file.originalname).toLowerCase();
+        const ok = /^\.(jpe?g|png|pdf)$/.test(ext) && /^(image\/(jpeg|png)|application\/pdf)$/.test(file.mimetype);
         cb(ok ? null : new Error('Type de fichier non autorisé. Formats acceptés: JPEG, PNG, PDF'), ok);
     },
 });

@@ -37,9 +37,9 @@ const uploadExport = multer({
     storage: exportStorage,
     limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
     fileFilter: (req, file, cb) => {
-        const allowed = /jpeg|jpg|png|gif|webp|pdf/
-        const ext = allowed.test(path.extname(file.originalname).toLowerCase())
-        const mime = allowed.test(file.mimetype)
+        // Ancrées : la regex non ancrée acceptait n'importe quelle extension contenant un des mots.
+        const ext = /^\.(jpe?g|png|gif|webp|pdf)$/.test(path.extname(file.originalname).toLowerCase())
+        const mime = /^(image\/(jpeg|png|gif|webp)|application\/pdf)$/.test(file.mimetype)
         if (ext && mime) cb(null, true)
         else cb(new Error('Invalid export file type'))
     }
