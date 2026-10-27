@@ -127,6 +127,19 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
 router.get('/:reviewId/:pipelineType', asyncHandler(async (req, res) => {
     const { reviewId, pipelineType } = req.params
 
+    // Le pipeline hérite de la visibilité de sa review : sans ce contrôle, les données de
+    // culture/curing d'une review privée étaient lisibles par quiconque connaissait son id.
+    const review = await prisma.review.findUnique({
+        where: { id: reviewId },
+        select: { authorId: true, isPublic: true, producerProfileId: true }
+    })
+    if (!review) {
+        return res.status(404).json({ error: 'Pipeline not found' })
+    }
+    if (!(await canReadFor(req, review, 'authorId'))) {
+        throw Errors.FORBIDDEN()
+    }
+
     const pipeline = await prisma.pipelineGithub.findFirst({
         where: {
             reviewId,
