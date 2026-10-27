@@ -21,6 +21,11 @@ import { finalizeUploads } from '../middleware/uploads.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const mediaDir = path.resolve(__dirname, '../../db/pipeline_media')
+// Propriétaire de chaque fichier, dans un dossier NON servi en statique (mediaDir l'est, sous /media).
+// Sans cette trace, n'importe quel compte pouvait supprimer n'importe quel média : les noms de
+// fichiers sont visibles dans toutes les reviews publiques.
+const ownersDir = path.resolve(__dirname, '../../db/pipeline_media_owners')
+const ownerFile = (filename) => path.join(ownersDir, `${filename}.owner`)
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -72,6 +77,12 @@ router.post('/', requireAuth, (req, res, next) => {
     // partout ailleurs (cf. `uploadFormats.js`), et un `.mkv` arrive régulièrement en
     // `application/octet-stream` — il aurait alors été enregistré comme une PHOTO, donc rendu dans
     // une balise `<img>` qui ne peut rien en faire.
+    try {
+        fs.mkdirSync(ownersDir, { recursive: true })
+        fs.writeFileSync(ownerFile(req.file.filename), String(req.user.id))
+    } catch (err) {
+        console.error('[media-upload] trace propriétaire non écrite :', err.message)
+    }
     const isVideo = isVideoExtension(req.file.filename)
     res.status(201).json({
         url: `/media/${req.file.filename}`,
@@ -90,11 +101,23 @@ router.delete('/:filename', requireAuth, async (req, res) => {
     if (!SAFE_FILENAME.test(req.params.filename)) {
         return res.status(400).json({ error: 'Nom de fichier invalide' })
     }
+    let owner = null
+    try {
+        owner = (await fs.promises.readFile(ownerFile(req.params.filename), 'utf8')).trim()
+    } catch {
+        // Pas de trace : fichier antérieur à ce contrôle, ou déjà supprimé.
+    }
+    // Fichier sans propriétaire connu : on ne supprime pas (le client ignore l'échec, l'attache est
+    // retirée de son côté dans tous les cas — seul le nettoyage disque est perdu).
+    if (owner !== String(req.user.id)) {
+        return res.status(403).json({ error: 'Ce média ne vous appartient pas' })
+    }
     try {
         await fs.promises.unlink(path.join(mediaDir, req.params.filename))
     } catch {
         // Fichier déjà absent — pas bloquant, l'attache côté client est retirée dans tous les cas.
     }
+    await fs.promises.unlink(ownerFile(req.params.filename)).catch(() => {})
     res.json({ success: true })
 })
 

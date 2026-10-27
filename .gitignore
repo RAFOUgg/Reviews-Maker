@@ -38,6 +38,7 @@ db/kyc_documents/*
 # candidats au commit. Les quelques fichiers déjà versionnés avant cette règle le restent — les
 # retirer de l'index toucherait à des médias potentiellement réels.
 db/pipeline_media/*
+db/pipeline_media_owners/
 db/*.db
 db/*.db-shm
 db/*.db-wal
