@@ -713,14 +713,6 @@ const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFiel
 const EditGroupModal = ({ isOpen, onClose, group, onUpdate, categories, availableFields }) => {
     if (!isOpen || !group) return null;
 
-    const [formData, setFormData] = useState({
-        name: group.name || '',
-        category: group.category || '',
-        icon: group.icon || '⭐',
-        description: group.description || '',
-        fields: group.fields || {}
-    });
-
     return (
         <CreateGroupModal
             isOpen={isOpen}

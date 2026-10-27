@@ -297,6 +297,14 @@ const PipelineWithSidebar = ({
         onChange({ ...value, cells: newCells });
     };
 
+    // Handler: Enregistrer une case (modale d'édition, groupe de pré-réglages)
+    const handleSaveCell = (cellIndex, cellData) => {
+        if (readonly) return;
+        const newCells = { ...cells, [cellIndex]: cellData };
+        setCells(newCells);
+        onChange({ ...value, cells: newCells });
+    };
+
     // Handler: Application en masse (sélection multiple)
     const handleApplyToSelection = (data) => {
         if (selectedCells.length === 0) return;

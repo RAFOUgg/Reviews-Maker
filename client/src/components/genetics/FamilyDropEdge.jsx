@@ -25,12 +25,11 @@ const FORK_OFFSET = 60;
  */
 export default function FamilyDropEdge({ target, targetX, targetY, data, selected }) {
     const { parentAId, parentBId, pairingSourceHandle, pairingTargetHandle, pairingWaypointX, pairingWaypointY } = data || {};
-    if (!parentAId || !parentBId) return null;
-
+    // Hooks avant tout retour anticipé (règle des hooks) — un id absent donne simplement null.
     const pairingEndpoints = useEdgeEndpointParams(parentAId, parentBId, pairingSourceHandle, pairingTargetHandle);
     const childRect = useFloatingNodeRect(target);
 
-    if (!pairingEndpoints) return null;
+    if (!parentAId || !parentBId || !pairingEndpoints) return null;
 
     const bendX = pairingWaypointX ?? (pairingEndpoints.sx + pairingEndpoints.tx) / 2;
     const bendY = pairingWaypointY ?? (pairingEndpoints.sy + pairingEndpoints.ty) / 2;

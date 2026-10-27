@@ -215,7 +215,6 @@ const DEFAULT_CONFIG = {
         tastes: true,
         effects: true,
         tastesIntensity: true,
-        effectsIntensity: true,
 
         // === NIVEAUX THC/CBD ===
         thcLevel: true,

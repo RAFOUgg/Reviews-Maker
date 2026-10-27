@@ -162,8 +162,6 @@ const ChainDataImportModal = () => {
         return () => { cancelled = true; };
     }, [sourceReviewId, pipelineKey, type]);
 
-    if (!picker) return null;
-
     const searchLower = search.trim().toLowerCase();
     const matches = (label) => !searchLower || (label || '').toLowerCase().includes(searchLower);
 
@@ -176,6 +174,7 @@ const ChainDataImportModal = () => {
     // n'a pas de sens), ou une annotation déjà épinglée (pour Photo/Vidéo uniquement, les documents
     // ne sont jamais épinglés en bulle). ----
     const reuseItems = useMemo(() => {
+        if (!picker) return [];
         const isCurrentTarget = (kind, id) => picker.targetType === kind && picker.targetIds.includes(id);
         const items = [];
 
@@ -217,7 +216,7 @@ const ChainDataImportModal = () => {
         }
         return items.filter(it => matches(it.originLabel));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type, store.nodes, store.edges, store.annotations, picker.targetType, picker.targetIds, searchLower]);
+    }, [type, store.nodes, store.edges, store.annotations, picker?.targetType, picker?.targetIds, searchLower]);
 
     const toggleReuse = (key) => setSelectedReuseKeys(prev => {
         const next = new Set(prev);
@@ -253,6 +252,10 @@ const ChainDataImportModal = () => {
         () => (reviewFlat && activePipelineDef ? getCellsForPipelineDef(reviewFlat, activePipelineDef, sourceInternalType) : []),
         [reviewFlat, activePipelineDef, sourceInternalType]
     );
+    // Retour anticipé APRÈS tous les hooks : placé plus haut, l'ouverture de la modale
+    // (picker null → objet) changeait le nombre de hooks rendus et faisait planter React.
+    if (!picker) return null;
+
     const filledCount = cells.filter(c => c.hasData).length;
 
     const handleSaveSourceCell = async (editedData) => {

@@ -97,7 +97,8 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
 
     // "Utiliser" un template Export Maker sauvegardé : charge sa config dans le store global
     // Export Maker — la prochaine ouverture d'"Aperçu" sur une review l'utilisera.
-    const useTemplate = (template) => {
+    // (pas un hook : nommé applyTemplate pour que la règle des hooks ne s’y applique pas)
+    const applyTemplate = (template) => {
         try {
             const config = typeof template.config === 'string' ? JSON.parse(template.config) : template.config
             applyConfig(config)
@@ -359,7 +360,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                         <div className="flex gap-2 flex-wrap">
                             {template.templateType === 'orchard' && (
                                 <button
-                                    onClick={() => useTemplate(template)}
+                                    onClick={() => applyTemplate(template)}
                                     className="flex-1 py-2 px-3 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors"
                                 >
                                     Utiliser

@@ -126,6 +126,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     // AVANT le retour anticipé — un hook placé après change l'ordre des hooks entre deux rendus,
     // ce que React interdit (constaté en plantant l'export sur l'autre template).
     const { shortHash } = useDocumentSeal(reviewData);
+    const { events, ready: eventsReady } = useReviewEvents(reviewData);
     const issuedAt = formatIssuedAt();
 
     if (!config || !reviewData) {
@@ -159,7 +160,6 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     );
 
     const massBalanceRows = getMassBalanceRows(reviewData);
-    const { events, ready: eventsReady } = useReviewEvents(reviewData);
     const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
 
     const hasLabInfo = reviewData.labName || reviewData.labMethod || reviewData.labAccredited;

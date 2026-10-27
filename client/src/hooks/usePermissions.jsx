@@ -183,40 +183,6 @@ export function ConditionalFeature({ feature, children, label, fallback }) {
 }
 
 /**
- * Example: Review Form Sections
- */
-export function CreateFlowerReviewForm() {
-    const { permissions } = usePermissions()
-
-    return (
-        <div className="space-y-6">
-            {/* Section 1: Info (always visible) */}
-            <SectionGuard section="info" label="General Information">
-                <GeneralInfoSection />
-            </SectionGuard>
-
-            {/* Section 3: Visual (always visible) */}
-            <SectionGuard section="visual" label="Visual & Appearance">
-                <VisualSection />
-            </SectionGuard>
-
-            {/* Fallback for restricted sections */}
-            {!permissions.sections.genetic && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                    <p className="font-medium text-yellow-900">🔒 Genetics Section</p>
-                    <p className="text-sm text-yellow-700">
-                        Manage cultivars and breeding data (Producteur only)
-                    </p>
-                    <a href="/pricing" className="text-sm font-medium text-yellow-600 hover:text-yellow-700">
-                        Upgrade to access →
-                    </a>
-                </div>
-            )}
-        </div>
-    )
-}
-
-/**
  * Example: Export Menu
  */
 export function ExportMenu({ reviewId, onExport }) {
@@ -357,7 +323,6 @@ export default {
     SectionGuard,
     ConditionalFeature,
     FeatureUpgradeModal,
-    CreateFlowerReviewForm,
     ExportMenu,
     AccountTierBadge,
     PermissionMatrix

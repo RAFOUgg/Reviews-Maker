@@ -113,17 +113,6 @@ export default function CreateReviewPage() {
         return undefined;
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-[50vh] flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-                    <p className="text-white">Chargement de la review...</p>
-                </div>
-            </div>
-        );
-    }
-
     // Charger la review pour l'édition
     useEffect(() => {
         if (isEditing) {
@@ -299,6 +288,19 @@ export default function CreateReviewPage() {
     const nextSection = () => { if (currentSectionIndex < sections.length - 1) { setCurrentSectionIndex(currentSectionIndex + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
     const prevSection = () => { if (currentSectionIndex > 0) { setCurrentSectionIndex(currentSectionIndex - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
     const goToSection = (index) => { setCurrentSectionIndex(index); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+    // Écran de chargement APRÈS tous les hooks : placé plus haut, le passage isLoading → false
+    // changeait le nombre de hooks rendus (React plante sur « Rendered more hooks »).
+    if (isLoading) {
+        return (
+            <div className="min-h-[50vh] flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                    <p className="text-white">Chargement de la review...</p>
+                </div>
+            </div>
+        );
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
