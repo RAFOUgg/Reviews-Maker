@@ -44,7 +44,7 @@ import exportRoutes from './routes/export.js'
 import adminRoutes from './routes/admin.js'
 import debugRoutes from './routes/debug.js'
 import permissionsRoutes from './routes/permissions.js'
-import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
+import { requireAuth, optionalAuth, logAuthRequest, blockBannedWrites } from './middleware/auth.js'
 import { trackSession } from './middleware/sessionTracking.js'
 import { notFoundHandler, errorHandler } from './utils/errorHandler.js'
 
@@ -123,6 +123,7 @@ app.use(passport.session())
 // Après passport : le suivi a besoin de req.user pour rattacher la session à son propriétaire.
 app.use(trackSession)
 app.use(logAuthRequest)
+app.use(blockBannedWrites)
 
 // API Routes
 app.use('/api/auth', authRoutes)

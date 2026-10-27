@@ -47,6 +47,26 @@ export const requireAuth = (req, res, next) => {
 }
 
 /**
+ * Garde global : un compte banni ne peut plus RIEN écrire, quelle que soit la façon dont la route
+ * vérifie l'authentification. `requireAuth` refusait déjà les bannis, mais une partie des routes
+ * contrôle l'auth en ligne (`requireAuthOrThrow`, `if (!req.user)`) sans regarder `isBanned` —
+ * un compte banni pouvait donc encore liker, commenter, créer des templates… Lecture et
+ * déconnexion restent permises (un banni doit pouvoir voir le motif et se déconnecter).
+ */
+const BANNED_WRITE_ALLOWLIST = ['/api/auth/logout']
+
+export const blockBannedWrites = (req, res, next) => {
+    if (!req.user?.isBanned) return next()
+    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next()
+    if (BANNED_WRITE_ALLOWLIST.includes(req.path)) return next()
+    return res.status(403).json({
+        error: 'account_banned',
+        message: req.user.banReason || 'Votre compte a été suspendu',
+        bannedAt: req.user.bannedAt
+    })
+}
+
+/**
  * Middleware optionnel : vérifie l'auth mais continue si non-authentifié
  * En DEV, injecte toujours un utilisateur mock
  */
