@@ -322,6 +322,12 @@ router.get('/:id', asyncHandler(async (req, res) => {
         return res.status(404).json({ error: 'Review not found' })
     }
 
+    // Une review privée n'est lisible que par son auteur ou son entreprise — même règle que
+    // GET /api/flower-reviews/:id. Sans ce contrôle, connaître l'id suffisait à lire une review privée.
+    if (!(await canReadFor(req, review, 'authorId'))) {
+        throw Errors.FORBIDDEN()
+    }
+
     const edibleReview = await prisma.edibleReview.findUnique({
         where: { reviewId }
     })
