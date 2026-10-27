@@ -15,6 +15,8 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: ['./src/test/setup.js'],
         globals: true,
+        // tests/e2e = specs Playwright (lancés par Playwright, pas par Vitest)
+        exclude: ['node_modules/**', 'dist/**', 'tests/e2e/**'],
         coverage: {
             reporter: ['text', 'html'],
             exclude: ['node_modules/', 'src/test/', '**/*.test.{js,jsx}']
