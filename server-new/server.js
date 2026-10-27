@@ -28,7 +28,9 @@ import productionChainsRoutes from './routes/production-chains.js'
 import reviewPipelineCellsRoutes from './routes/review-pipeline-cells.js'
 import reviewGeneralFieldsRoutes from './routes/review-general-fields.js'
 import mediaUploadRoutes from './routes/media-upload.js'
-import pipelinesRoutes from './routes/pipelines.js'
+// routes/pipelines.js démonté (2026-10-28) : aucun appelant côté client, et ses étapes n'ont aucun
+// propriétaire en base — tout compte connecté pouvait modifier/supprimer n'importe quelle étape.
+// Fichier conservé jusqu'au lot L14 (suppression du code mort).
 import flowerReviewsRoutes from './routes/flower-reviews.js'
 import hashReviewsRoutes from './routes/hash-reviews.js'
 import concentrateReviewsRoutes from './routes/concentrate-reviews.js'
@@ -142,7 +144,7 @@ app.use('/api/production-chains', productionChainsRoutes)
 app.use('/api/review-pipeline-cells', reviewPipelineCellsRoutes)
 app.use('/api/review-general-fields', reviewGeneralFieldsRoutes)
 app.use('/api/media-upload', mediaUploadRoutes)
-app.use('/api/pipelines', pipelinesRoutes)
+// app.use('/api/pipelines', pipelinesRoutes) — démonté, voir l'import plus haut
 app.use('/api/flower-reviews', flowerReviewsRoutes)
 app.use('/api/hash-reviews', hashReviewsRoutes)
 app.use('/api/concentrate-reviews', concentrateReviewsRoutes)
