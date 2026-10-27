@@ -258,3 +258,14 @@ export function validateReviewData(data) {
         cleaned
     }
 }
+
+/**
+ * Pagination bornée pour les listes publiques. Sans plafond, `?limit=1000000` faisait charger et
+ * sérialiser toute la table en une requête (déni de service à la portée de n'importe quel visiteur),
+ * et une page ≤ 0 donnait un `skip` négatif que Prisma rejette en 500.
+ */
+export function parsePagination(page, limit, { defaultLimit = 20, maxLimit = 100 } = {}) {
+    const l = Math.min(Math.max(parseInt(limit, 10) || defaultLimit, 1), maxLimit)
+    const p = Math.max(parseInt(page, 10) || 1, 1)
+    return { page: p, limit: l, skip: (p - 1) * l }
+}

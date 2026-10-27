@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
-import { validateReviewId } from '../utils/validation.js'
+import { validateReviewId, parsePagination } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
@@ -871,8 +871,7 @@ router.get('/', asyncHandler(async (req, res) => {
     const userId = req.user?.id
     const { page = 1, limit = 20 } = req.query
 
-    const skip = (parseInt(page) - 1) * parseInt(limit)
-    const take = parseInt(limit)
+    const { skip, limit: take } = parsePagination(page, limit)
 
     const where = userId
         ? { OR: [{ isPublic: true }, { authorId: userId }] }
@@ -893,8 +892,8 @@ router.get('/', asyncHandler(async (req, res) => {
     res.json({
         reviews,
         pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: skip / take + 1,
+            limit: take,
             total,
             pages: Math.ceil(total / take)
         }

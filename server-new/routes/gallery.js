@@ -10,6 +10,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../utils/errorHandler.js';
+import { parsePagination } from '../utils/validation.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -44,7 +45,11 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
         indicaMax,      // Ratio indica maximum (0-100)
     } = req.query;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const { page: safePage, limit: safeLimit, skip } = parsePagination(page, limit);
+    // Tri limité aux colonnes prévues : un nom arbitraire faisait planter Prisma (500), une
+    // direction autre que asc/desc aussi.
+    const safeSortBy = ['createdAt', 'updatedAt', 'note', 'holderName'].includes(sortBy) ? sortBy : 'createdAt';
+    const safeOrder = order === 'asc' ? 'asc' : 'desc';
 
     // Construction des filtres
     const where = {
@@ -94,8 +99,8 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
         prisma.review.findMany({
             where,
             skip,
-            take: parseInt(limit),
-            orderBy: { [sortBy]: order },
+            take: safeLimit,
+            orderBy: { [safeSortBy]: safeOrder },
             include: {
                 author: {
                     select: {
@@ -142,10 +147,10 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
     res.json({
         reviews: reviewsWithStats,
         pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
+            page: safePage,
+            limit: safeLimit,
             total,
-            pages: Math.ceil(total / parseInt(limit)),
+            pages: Math.ceil(total / safeLimit),
         },
     });
 }));
@@ -551,7 +556,7 @@ router.get('/stats/popular', asyncHandler(async (req, res) => {
                 _count: 'desc',
             },
         },
-        take: parseInt(limit),
+        take: parsePagination(1, limit, { defaultLimit: 10, maxLimit: 50 }).limit,
     });
 
     res.json(reviews);
