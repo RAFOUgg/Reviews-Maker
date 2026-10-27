@@ -2,6 +2,11 @@ import express from 'express'
 import { prisma } from '../server.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
+import { canReadFor } from '../services/access.js'
+
+// Échappement HTML pour /:id/export, qui renvoie du text/html sur l'origine de l'app.
+const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]))
+const px = (v, fallback) => (Number.isFinite(Number(v)) ? Number(v) : fallback)
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -270,14 +275,20 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     // Accept either reviewData in body or reviewId to fetch
     const tpl = await getTemplateById(req.params.id)
     if (!tpl) throw Errors.NOT_FOUND('Template')
+    // Même règle que GET /:id : un template privé n'est exportable que par son propriétaire.
+    if (!tpl.isPublic && tpl.ownerId !== req.user?.id) throw Errors.FORBIDDEN()
 
-    const { reviewId, reviewData } = req.body || {}
-    let bound = reviewData || null
+    // `reviewData` libre n'est plus accepté : il permettait d'injecter du HTML arbitraire (XSS
+    // réfléchie via un formulaire auto-soumis depuis un autre site). Seul un reviewId lisible est lié.
+    const { reviewId } = req.body || {}
+    let bound = null
     if (reviewId) {
         try {
             const review = await prisma.review.findUnique({ where: { id: reviewId }, include: { author: { select: { id: true, username: true, avatar: true, discordId: true } }, likes: true } })
+            if (review && !(await canReadFor(req, review, 'authorId'))) throw Errors.FORBIDDEN()
             bound = review ? liftExportMakerFromExtra(formatReview(review, null)) : null
         } catch (e) {
+            if (e?.statusCode === 403 || e?.status === 403) throw e
             // prisma may not be available or table missing
             bound = null
         }
@@ -290,19 +301,21 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     function renderZone(zone) {
         let content = ''
         if (bound) {
-            if (zone.source === 'holderName') content = bound.holderName || ''
+            if (zone.source === 'holderName') content = escapeHtml(bound.holderName)
             if (zone.source === 'images[0]') {
                 const img = bound.mainImageUrl || bound.thumbnailUrl || (bound.images && Array.isArray(bound.images) && bound.images[0] ? (bound.images[0].startsWith('/images/') ? bound.images[0] : `/images/${bound.images[0]}`) : null)
-                content = img ? `<img src="${img}" style="max-width:100%"/>` : ''
+                content = img ? `<img src="${escapeHtml(img)}" style="max-width:100%"/>` : ''
             }
         }
-        const style = `position:absolute; left:${zone.x || 0}px; top:${zone.y || 0}px; width:${zone.w || 200}px; height:${zone.h || 50}px; overflow:hidden; padding:6px;`;
+        const style = `position:absolute; left:${px(zone.x, 0)}px; top:${px(zone.y, 0)}px; width:${px(zone.w, 200)}px; height:${px(zone.h, 50)}px; overflow:hidden; padding:6px;`;
         return `<div style="${style}">${content}</div>`
     }
 
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${tpl.name}</title></head><body><div style="position:relative;width:800px;height:1100px;">${page.zones.map(renderZone).join('')}</div></body></html>`
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(tpl.name)}</title></head><body><div style="position:relative;width:800px;height:1100px;">${page.zones.map(renderZone).join('')}</div></body></html>`
 
-    res.setHeader('Content-Type', 'text/html')
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    // Défense en profondeur : aucun script ne doit s'exécuter dans ce document généré.
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'")
     res.send(html)
 }))
 
