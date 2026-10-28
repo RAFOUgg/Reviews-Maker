@@ -48,11 +48,13 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
     // Vérifier que la review appartient à l'utilisateur
     const review = await prisma.review.findUnique({
         where: { id: reviewId },
-        select: { authorId: true }
+        // `producerProfileId` : sans lui, `canModifyFor` traitait une review d'entreprise comme
+        // personnelle (un membre révoqué restait autorisé, un membre actif était refusé).
+        select: { authorId: true, producerProfileId: true }
     })
 
     if (!review) {
-        throw Errors.NOT_FOUND('Review not found')
+        throw Errors.NOT_FOUND('Review')
     }
 
     if (!(await canModifyFor(req, review, 'authorId'))) {
@@ -164,26 +166,25 @@ router.get('/:reviewId/:pipelineType', optionalAuth, asyncHandler(async (req, re
 router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     const { id } = req.params
 
-    // Vérifier que le pipeline appartient à l'utilisateur
+    // `PipelineGithub` ne déclare AUCUNE relation vers `Review` (seulement la colonne `reviewId`) :
+    // l'ancien `include: { review }` faisait lever Prisma à chaque appel (500). Le droit se lit donc
+    // sur la review elle-même, comme le GET et le POST — et avec les mêmes règles (`canModifyFor` :
+    // auteur d'une review personnelle, membre en écriture d'une review d'entreprise).
     const pipeline = await prisma.pipelineGithub.findUnique({
         where: { id },
-        include: {
-            review: {
-                select: { authorId: true }
-            }
-        }
+        select: { id: true, reviewId: true }
     })
 
     if (!pipeline) {
-        throw Errors.NOT_FOUND('Pipeline not found')
+        throw Errors.NOT_FOUND('Pipeline')
     }
 
     const review = await prisma.review.findUnique({
         where: { id: pipeline.reviewId },
-        select: { authorId: true }
+        select: { authorId: true, producerProfileId: true }
     })
 
-    if (review?.authorId !== req.user.id) {
+    if (!review || !(await canModifyFor(req, review, 'authorId'))) {
         throw Errors.FORBIDDEN('You do not own this pipeline')
     }
 
