@@ -109,3 +109,6 @@ setup-dev-local.sh
 # `reports/` à la racine est celle qu'utilisent les sondes lancées depuis la racine du dépôt.
 reports/
 tools/export-audit/reports/
+
+# État local oh-my-claudecode (jamais versionné)
+.omc/

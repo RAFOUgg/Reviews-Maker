@@ -1,0 +1,15 @@
+{
+  "name": "terpologie-ops-bot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Bot Discord de pilotage du robot de développement Reviews-Maker (VPS, utilisateur hermes)",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "check": "node --check bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  }
+}

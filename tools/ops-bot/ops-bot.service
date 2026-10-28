@@ -1,0 +1,14 @@
+[Unit]
+Description=Terpologie Ops (bot Discord de pilotage)
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/ops-bot
+EnvironmentFile=%h/ops-bot/.env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/node %h/ops-bot/bot.js
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
