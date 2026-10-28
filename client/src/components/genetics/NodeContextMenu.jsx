@@ -6,8 +6,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
-import { Image as ImageIcon, MessageSquarePlus } from 'lucide-react';
+import { Copy, Image as ImageIcon, MessageSquarePlus } from 'lucide-react';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import { copyElements, geneticsNodeItem } from '../../utils/graphElementClipboard';
 import { useToast } from '../shared/ToastContainer';
 
 const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, targetIds, onPinDataBubble }) => {
@@ -15,6 +16,9 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, tar
     const { fitView } = useReactFlow();
     const toast = useToast();
     const menuRef = useRef(null);
+    // Retour visuel du copier, au même endroit que le clic (comme AnnotationContextMenu.jsx) —
+    // un toast qui apparaît à l'autre bout de l'écran ne dit pas QUOI a été copié.
+    const [copied, setCopied] = useState(false);
     // x/y sont le point de clic brut (clientX/clientY) — sans correction, le menu peut déborder
     // hors du viewport (coupé/inaccessible) près des bords droit/bas de l'écran ou de la fenêtre
     // de review incrustée. On mesure sa taille réelle après montage et on le recale si besoin.
@@ -139,13 +143,31 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, tar
         }
     };
 
-    // Épingler les données de l'individu en bulle — porte sur toute la sélection multiple si ce
-    // nœud en fait partie (`targetIds`, résolu par le canevas), sur lui seul sinon.
-    const pinTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
+    // Cibles des actions groupées (épingler, copier) : toute la sélection multiple si ce nœud en
+    // fait partie (`targetIds`, résolu par le canevas), lui seul sinon.
+    const actionTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
 
     const handlePinDataBubble = () => {
-        onPinDataBubble?.(pinTargets);
+        onPinDataBubble?.(actionTargets);
         onClose();
+    };
+
+    // Copier — contrairement à « Dupliquer », l'élément part dans le presse-papiers et RESTE
+    // disponible : on choisit ensuite où le coller (clic droit sur le fond du canevas), autant de
+    // fois qu'on veut, sur cet arbre comme sur un autre.
+    const handleCopy = async () => {
+        const selected = actionTargets
+            .map(id => store.nodes.find(n => n.id === id))
+            .filter(Boolean);
+        if (selected.length === 0) return;
+
+        // Position de référence = le premier élément : les décalages relatifs des suivants sont
+        // conservés au collage, la disposition copiée se retrouve donc telle quelle.
+        const origin = selected[0].position;
+        const { label } = await copyElements(selected.map(n => geneticsNodeItem(n, origin)));
+        setCopied(true);
+        toast.success(`${label} copié — clic droit sur le fond pour coller`);
+        setTimeout(onClose, 500);
     };
 
     const mediaCount = Array.isArray(node?.media) ? node.media.length : 0;
@@ -225,6 +247,12 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, tar
                     </button>
                     <button className="context-menu-item" onClick={handleCreateChild}>
                         ➕ Ajouter enfant
+                    </button>
+                    <button className="context-menu-item" onClick={handleCopy}>
+                        <Copy size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        {copied
+                            ? 'Copié !'
+                            : `Copier${actionTargets.length > 1 ? ` les ${actionTargets.length} individus` : ''}`}
                     </button>
                     <button className="context-menu-item" onClick={handleDuplicate}>
                         📋 Dupliquer

@@ -11,6 +11,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import crypto from 'node:crypto'
+import { createProjects, PROJECT_LAYOUT } from './projects.js'
 
 const HOME = os.homedir()
 const env = (k, d) => process.env[k] ?? d
@@ -43,9 +44,11 @@ if (!TOKEN || !GUILD_ID || !OWNER_ID) {
 // mode : 'plan' = lecture seule (Claude n'écrit rien) ; 'edit' = peut coder sur une branche ; null = salon réservé au bot.
 // forum : salon Forum (un post = une conversation ou un rapport) au lieu d'un salon texte.
 const LAYOUT = {
-  '📋 PILOTAGE': { pannel: null, plan: null, questions: null, brainstorming: 'plan' },
+  '🧭 ACCUEIL': { bienvenue: null, outils: null },
+  '📋 PILOTAGE':{ pannel: null, plan: null, questions: null, brainstorming: 'plan' },
   '🗓 PLANNING': { 'tâches': null, 'journal-planning': null },
   '🛠 DEV': { dev: 'edit', 'front-end': 'edit', 'back-end': 'edit', da: 'edit' },
+  ...PROJECT_LAYOUT, // 🌿 TERPOLOGIE / 🚭 QUITADDICTION / 🍃 LAFONCEDALLE : panel-, logs-, data-
   '🚀 PROD': { prod: 'plan', logs: null },
   '🗄 ARCHIVES': { archives: null },
 }
@@ -175,6 +178,10 @@ const ensureLayout = async (g) => {
       channels[name] = ch
     }
   }
+  // Ordre des catégories = ordre de LAYOUT (Discord range sinon par date de création).
+  const cats = (await g.channels.fetch()).filter(c => c?.type === ChannelType.GuildCategory)
+  const order = Object.keys(LAYOUT).map(n => cats.find(c => c.name === n)).filter(Boolean)
+  await g.channels.setPositions(order.map((c, i) => ({ channel: c.id, position: i }))).catch(e => console.error('positions', e.message))
   const archives = all.find(c => c?.type === ChannelType.GuildCategory && c.name === '🗄 ARCHIVES')
   for (const c of (await g.channels.fetch()).values()) {
     if (c?.name?.startsWith('ancien-') && archives && c.parentId !== archives.id) await c.setParent(archives.id).catch(() => {})
@@ -213,6 +220,15 @@ const parseLots = (md) => {
     const status = body.match(/^Statut : (.+)$/m)?.[1]?.trim() ?? '—'
     const doc = body.replace(/^Statut : .+$/m, '').trim()
     lots.push({ id: m[1], title: m[2].trim(), status, doc })
+  }
+  // Lots terminés sans section détaillée : ils ne vivent que dans le tableau d'état en tête du plan.
+  const known = new Set(lots.map(l => l.id))
+  for (const m of md.matchAll(/^\|([^|]+)\|([^|]+)\|([^|]*)\|/gm)) {
+    const lead = m[1].trim().match(/^((?:L\d+\w*(?:\/|, )?)+)\s*(.*)$/)
+    if (!lead) continue
+    const ids = lead[1].match(/L\d+\w*/g)
+    if (ids.some(id => known.has(id))) continue
+    lots.push({ id: ids.join(', '), title: lead[2].replace(/[`()]/g, '').trim() || '—', status: m[2].replace(/\*\*/g, '').trim(), doc: `Branche / emplacement : ${m[3].trim() || '—'}\n_(lot résumé dans le tableau d'état en tête du plan)_` })
   }
   return lots
 }
@@ -270,15 +286,25 @@ const publishTasks = async (lots) => {
   for (const [title, pick] of groups) {
     const items = lots.filter(pick)
     if (!items.length) continue
-    // Un embed par lot (titre + statut + documentation), par paquets de 10 (limite Discord).
-    for (let i = 0; i < items.length; i += 10) {
-      const embeds = items.slice(i, i + 10).map(l => new EmbedBuilder()
-        .setTitle(clip(`${ICON(l.status)} ${l.id} — ${l.title}`, 250))
-        .setDescription(clip(`**Statut :** ${l.status}\n\n${l.doc || '_(pas de description dans le plan)_'}`, 1500))
-        .setColor(ICON(l.status) === '✅' ? 0x22c55e : ICON(l.status) === '⏳' ? 0xf59e0b : ICON(l.status) === '🟢' ? 0x8b5cf6 : 0x64748b))
-      const m = await ch.send({ content: i === 0 ? `**${title}** (${items.length})` : undefined, embeds })
+    // Un embed par lot (titre + statut + documentation). Discord limite un message à 10 embeds ET
+    // 6000 caractères cumulés : on remplit chaque message jusqu'à l'une des deux bornes.
+    const embeds = items.map(l => new EmbedBuilder()
+      .setTitle(clip(`${ICON(l.status)} ${l.id} — ${l.title}`, 250))
+      .setDescription(clip(`**Statut :** ${l.status}\n\n${l.doc || '_(pas de description dans le plan)_'}`, 1500))
+      .setColor(ICON(l.status) === '✅' ? 0x22c55e : ICON(l.status) === '⏳' ? 0xf59e0b : ICON(l.status) === '🟢' ? 0x8b5cf6 : 0x64748b))
+    let batch = [], size = 0, firstOfGroup = true
+    const flush = async () => {
+      if (!batch.length) return
+      const m = await ch.send({ content: firstOfGroup ? `**${title}** (${items.length})` : undefined, embeds: batch })
       state.taskMessages.push(m.id)
+      batch = []; size = 0; firstOfGroup = false
     }
+    for (const e of embeds) {
+      const n = (e.data.title?.length ?? 0) + (e.data.description?.length ?? 0)
+      if (batch.length === 10 || size + n > 5800) await flush()
+      batch.push(e); size += n
+    }
+    await flush()
   }
 }
 const logLotChanges = async (lots) => {
@@ -402,6 +428,14 @@ const answerQuestion = async (qid, answer) => {
   }
   await journal(`question résolue : ${clip(q.text, 100)} → ${clip(answer, 100)}`)
 
+  // Rapport de test (`_test-*.md`) : on vérifie le circuit des boutons sans relancer Claude (quota).
+  if (q.origin?.test) {
+    await channels.questions.send(`✅ **Résolu (test)** — ${clip(q.text, 200)}
+→ ${clip(answer, 200)}
+Claude n'est pas relancé pour un rapport de test.`)
+    return
+  }
+
   // Reprise du travail avec la réponse.
   const origin = await client.channels.fetch(q.originId).catch(() => null)
   if (!origin) return
@@ -453,16 +487,18 @@ const watchReports = async () => {
     await send(thread, fresh)
     rec.offset = st.size; saveState()
     const qs = parseQuestions(fresh)
-    if (qs.length) await askQuestions(qs, { threadId: thread.id, forum: 'dev', report: file })
+    if (qs.length) await askQuestions(qs, { threadId: thread.id, forum: 'dev', report: file, test: file.startsWith('_test-') })
   }
 }
 
 // ── #pannel : un message permanent, navigation par boutons ─────────────────
 const VIEWS = [
-  ['activite', '📡 Activité'], ['prod', '🚀 Prod'], ['lots', '🗂 Lots'], ['runs', '🔁 Runs'],
-  ['commits', '📝 Commits'], ['rapports', '🌙 Rapports'], ['erreurs', '⚠️ Erreurs'], ['questions', '❓ Questions'],
+  ['activite', "🏠 Vue d'ensemble"], ['prod', '🚀 Prod'], ['lots', '🗂 Lots'], ['runs', '🔁 Runs'],
+  ['commits', '📝 Commits'], ['rapports', '🌙 Rapports'], ['erreurs', '⚠️ Erreurs'], ['questions', '❓ Questions'], ['outils', '🧰 Outils'],
 ]
 const readDashboard = () => { try { return JSON.parse(fs.readFileSync(DASHBOARD_JSON, 'utf8')) } catch { return null } }
+const projects = createProjects({ state, saveState, channels, OWNER_ID, DASHBOARD_URL, REPO, journal, readDashboard })
+COMMANDS.push(projects.toolCommand)
 const panelEmbed = (view) => {
   const d = readDashboard()
   const e = new EmbedBuilder().setColor(0x8b5cf6).setURL(DASHBOARD_URL)
@@ -471,14 +507,34 @@ const panelEmbed = (view) => {
   const label = VIEWS.find(v => v[0] === view)?.[1] ?? ''
   e.setTitle(`Tableau de bord — ${label}`)
   if (view === 'activite') {
-    e.setDescription([
-      `🤖 **Bot** : ${busy ? `occupé — ${busy}` : 'libre'}${queue.length ? ` (${queue.length} en attente)` : ''}`,
-      `⚙️ **Robot (cron)** : ${d.running.length ? d.running.map(r => `${r.job} depuis ${r.since}`).join(', ') : 'au repos'}`,
-      `❓ **Questions en attente** : ${Object.values(state.questions).filter(q => !q.answered).length}`,
-      `🚀 **Prod** : API ${d.prod.health} · build \`${d.prod.build}\`${d.prod.undeployed ? ` · ⚠️ ${d.prod.undeployed} fichier(s) non déployé(s)` : ' · à jour'}`,
-      `🖥 **VPS** : ${d.vps.mem} · disque ${d.vps.disk}`,
-      `🌙 **Prochain lot** : ${d.lots.find(l => l.status.startsWith('prêt'))?.id ?? 'aucun « prêt »'} (nuit, ${NIGHT_HOUR_UTC} h UTC)`,
-    ].join('\n'))
+    // Vue d'ensemble : l'état de TOUT en un coup d'œil ; les autres boutons donnent le détail.
+    const pending = Object.values(state.questions).filter(q => !q.answered)
+    const count = (t) => d.lots.filter(l => l.tone === t).length
+    const ready = d.lots.filter(l => l.tone === 'blue')
+    const doing = d.lots.filter(l => l.tone === 'amber' || l.tone === 'red')
+    const nextEv = [...(guild?.scheduledEvents.cache.values() ?? [])].filter(ev => ev.status === 1)
+      .sort((a, b) => a.scheduledStartTimestamp - b.scheduledStartTimestamp)[0]
+    const lastRun = d.runs.find(r => !/^(dashboard-web|discord-status)$/.test(r.job))
+    const report = d.reports[0]
+    const ok = String(d.prod.health).startsWith('200')
+    e.setColor(pending.length || !ok ? 0xf59e0b : 0x22c55e)
+      .setDescription(`**🧰 État des outils** (${projects.toolCounts().up}/${projects.toolCounts().total} en ligne)\n${projects.toolsSummary()}\n\n${ok ? '🟢' : '🔴'} **Prod ${ok ? 'en ligne' : 'en panne'}** · ${pending.length ? `❓ **${pending.length} question(s) t'attendent**` : 'aucune question en attente'} · ${busy || d.running.length ? '⚙️ robot au travail' : '💤 robot au repos'}`)
+      .addFields(
+        { name: '🤖 Robot', value: clip([d.running.length ? d.running.map(r => `⏳ ${r.job} (${r.since})`).join('\n') : '💤 aucun run en cours',
+          `Bot Discord : ${busy ? `occupé — ${clip(busy, 60)}` : 'libre'}${queue.length ? ` · ${queue.length} en file` : ''}`].join('\n'), 1024), inline: true },
+        { name: '❓ Questions', value: pending.length ? clip(pending.slice(0, 3).map(q => `• ${clip(q.text, 70)} — <#${q.postId}>`).join('\n'), 1024) : '✅ rien en attente', inline: true },
+        { name: '🚀 Prod', value: `API **${d.prod.health}**\nbuild \`${d.prod.build}\` (${d.prod.deployedAt || '?'})\n${d.prod.undeployed ? `⚠️ ${d.prod.undeployed} fichier(s) non déployé(s)` : '✅ à jour avec main'}`, inline: true },
+        { name: '🗂 Lots', value: `✅ ${count('green')} faits · ⏳ ${doing.length} en cours/bloqués\n🟢 ${ready.length} prêts · ⬜ ${count('grey')} à faire`, inline: true },
+        { name: '⏳ En cours', value: doing.length ? clip(doing.map(l => `**${l.id}** ${clip(l.title, 40)}`).join('\n'), 1024) : 'aucun', inline: true },
+        { name: '🌙 Prochains', value: ready.length ? clip(ready.slice(0, 3).map((l, i) => `${i + 1}. **${l.id}** ${clip(l.title, 40)}`).join('\n'), 1024) : 'aucun « prêt »', inline: true },
+        { name: '🔍 PR ouvertes', value: prCache.list.length ? clip(prCache.list.slice(0, 4).map(p => `[#${p.number}](${p.html_url}) ${clip(p.title, 45)}`).join('\n'), 1024) : 'aucune', inline: true },
+        { name: '📅 Prochain événement', value: nextEv ? `${clip(nextEv.name, 60)}\n<t:${Math.floor(nextEv.scheduledStartTimestamp / 1000)}:R>` : 'aucun', inline: true },
+        { name: '🖥 VPS', value: `${d.vps.mem}\ndisque ${d.vps.disk}`, inline: true },
+        { name: '🔁 Dernier run', value: lastRun ? `${lastRun.status === 'completed' ? '✅' : lastRun.status === 'running' ? '⏳' : '❌'} ${lastRun.job} — ${lastRun.at}` : '—', inline: true },
+        { name: '📝 Dernier commit', value: d.commits[0] ? `\`${d.commits[0].sha}\` ${clip(d.commits[0].subject, 70)}` : '—', inline: true },
+        { name: '⚠️ Erreurs', value: d.errors.length ? `${d.errors.length} récente(s) → bouton Erreurs` : 'aucune', inline: true },
+        { name: '🌙 Dernier rapport', value: report ? clip(`**${report.name}** (${report.at})\n${report.tail.split('\n').filter(l => l.trim()).slice(-3).join('\n')}`, 1024) : 'aucun' },
+      )
   } else if (view === 'prod') {
     e.setDescription([`API : **${d.prod.health}**`, `Build en prod : \`${d.prod.build}\` (déployé le ${d.prod.deployedAt || '?'})`,
       `main GitHub : \`${d.prod.main}\``, d.prod.undeployed ? `⚠️ ${d.prod.undeployed} fichier(s) de code non déployé(s)` : '✅ prod à jour avec main'].join('\n'))
@@ -497,14 +553,30 @@ const panelEmbed = (view) => {
   } else if (view === 'questions') {
     const qs = Object.values(state.questions).sort((a, b) => b.askedAt - a.askedAt).slice(0, 15)
     e.setDescription(qs.length ? qs.map(q => `${q.answered ? '✅' : '❓'} ${clip(q.text, 100)}${q.answered ? ` → ${clip(q.answer, 60)}` : ''} — <#${q.postId}>`).join('\n') : 'Aucune question.')
+  } else if (view === 'outils') {
+    e.setDescription(clip(`${projects.toolsSummary()}\n\nFiches détaillées : ${channels.outils ?? '#outils'} · gestion : \`/outil\``, 4000))
   }
   return e
 }
-const panelComponents = (view) => [0, 4].map(start => new ActionRowBuilder().addComponents(
-  ...VIEWS.slice(start, start + 4).map(([id, label]) => new ButtonBuilder().setCustomId(`nav:${id}`).setLabel(label)
-    .setStyle(id === view ? ButtonStyle.Primary : ButtonStyle.Secondary))))
-  .concat(new ActionRowBuilder().addComponents(new ButtonBuilder().setLabel('Page web complète').setStyle(ButtonStyle.Link).setURL(DASHBOARD_URL)))
+// 4 boutons par rangée ; le lien vers la page web complète la dernière rangée.
+const panelComponents = (view) => {
+  const rows = []
+  for (let s = 0; s < VIEWS.length; s += 4) {
+    rows.push(new ActionRowBuilder().addComponents(...VIEWS.slice(s, s + 4).map(([id, label]) => new ButtonBuilder().setCustomId(`nav:${id}`).setLabel(label)
+      .setStyle(id === view ? ButtonStyle.Primary : ButtonStyle.Secondary))))
+  }
+  rows.at(-1).addComponents(new ButtonBuilder().setLabel('Page web complète').setStyle(ButtonStyle.Link).setURL(DASHBOARD_URL))
+  return rows
+}
+// PR ouvertes, relues au plus toutes les 10 min (API GitHub).
+const prCache = { at: 0, list: [] }
+const refreshPRs = async () => {
+  if (Date.now() - prCache.at < 10 * 60 * 1000) return
+  prCache.list = await gh(`/repos/${REPO}/pulls?state=open&per_page=20`).catch(() => prCache.list)
+  prCache.at = Date.now()
+}
 const refreshPanel = async () => {
+  await refreshPRs()
   const ch = channels.pannel
   const payload = { content: '', embeds: [panelEmbed(state.panel.view)], components: panelComponents(state.panel.view) }
   const msg = state.panel.messageId && await ch.messages.fetch(state.panel.messageId).catch(() => null)
@@ -532,10 +604,14 @@ const safely = (name, fn) => () => fn().catch(e => console.error(name, e.message
 client.once(Events.ClientReady, async () => {
   guild = await client.guilds.fetch(GUILD_ID)
   await ensureLayout(guild)
+  await guild.scheduledEvents.fetch().catch(() => {}) // cache lu par la vue d'ensemble du #pannel
   await guild.commands.set(COMMANDS.map(c => c.toJSON()))
   console.log(`Prêt : ${client.user.tag}, ${Object.keys(channels).length} salons`)
   await safely('plan', () => publishPlan(true))()
+  await safely('onboarding', projects.publishOnboarding)()
+  await safely('projets', projects.refreshAll)()
   await safely('pannel', refreshPanel)()
+  setInterval(safely('projets', projects.refreshAll), 2 * 60 * 1000)
   setInterval(safely('plan', () => publishPlan()), 10 * 60 * 1000)
   setInterval(safely('rapports', watchReports), 60 * 1000)
   setInterval(safely('pannel', refreshPanel), 2 * 60 * 1000)
@@ -551,6 +627,7 @@ client.on(Events.InteractionCreate, async (i) => {
         state.panel.view = id; saveState()
         return i.update({ embeds: [panelEmbed(id)], components: panelComponents(id) })
       }
+      if (kind === 'tool' || kind === 'proj') return projects.handleButton(i, kind, id, idx)
       const q = state.questions[id]
       if (!q) return i.reply({ content: 'Question inconnue.', ephemeral: true })
       if (q.answered) return i.reply({ content: `Déjà répondu : ${q.answer}`, ephemeral: true })
@@ -576,6 +653,7 @@ client.on(Events.InteractionCreate, async (i) => {
       await journal('robot lancé à la main (/go)')
       return i.editReply(`🚀 Robot lancé sur le premier lot « prêt ». Le rapport arrivera en post dans ${channels.dev}.`)
     }
+    if (i.commandName === 'outil') return projects.handleToolCommand(i)
     if (i.commandName === 'questions') {
       const pending = Object.values(state.questions).filter(q => !q.answered)
       return i.editReply(pending.length ? pending.map(q => `❓ ${clip(q.text, 150)} — <#${q.postId}>`).join('\n') : 'Aucune question en attente.')

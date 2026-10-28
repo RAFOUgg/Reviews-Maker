@@ -11,12 +11,17 @@ import { useReactFlow } from 'reactflow';
 import { useNavigate } from 'react-router-dom';
 import { Download, Clipboard, Copy, Image as ImageIcon, Plus, MessageSquarePlus } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { copyElements, chainNodeItem } from '../../utils/graphElementClipboard';
+import { useToast } from '../shared/ToastContainer';
 
 const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, targetIds, onPinDataBubble }) => {
     const store = useProductionChainStore();
     const { fitView } = useReactFlow();
     const navigate = useNavigate();
+    const toast = useToast();
     const menuRef = useRef(null);
+    // Retour visuel du copier là où on a cliqué (même motif qu'AnnotationContextMenu.jsx).
+    const [copied, setCopied] = useState(false);
     // Cf. NodeContextMenu.jsx (genetics) : recale le menu s'il déborde du viewport près des bords.
     const [pos, setPos] = useState({ left: x, top: y });
 
@@ -108,13 +113,37 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
-    // Épingler les données attachées en bulle — porte sur toute la sélection multiple si ce nœud
-    // en fait partie (`targetIds`, résolu par le canevas), sur lui seul sinon.
-    const pinTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
+    // Cibles des actions groupées (épingler, copier) : toute la sélection multiple si ce nœud en
+    // fait partie (`targetIds`, résolu par le canevas), lui seul sinon.
+    const actionTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
 
     const handlePinDataBubble = () => {
-        onPinDataBubble?.(pinTargets);
+        onPinDataBubble?.(actionTargets);
         onClose();
+    };
+
+    // Copier le PRODUIT lui-même — à ne pas confondre avec « Copier les N cellules attachées »
+    // juste en dessous, qui ne copie que les cellules pour les recoller sur un autre produit.
+    // Ici, le produit part entier dans le presse-papiers (review liée, couleur, cellules, médias)
+    // et y RESTE : on choisit ensuite où le coller, ici ou sur une autre chaîne.
+    const handleCopyElement = async () => {
+        const selected = actionTargets
+            .map(id => store.nodes.find(n => n.id === id))
+            .filter(Boolean);
+        if (selected.length === 0) return;
+
+        // Position de référence = le premier élément, pour conserver la disposition au collage.
+        const origin = selected[0].position;
+        const { label } = await copyElements(selected.map(n => chainNodeItem(n, {
+            origin,
+            // Le résumé de la fiche liée n'est présent que si ce produit a déjà été survolé /
+            // sélectionné — la bulle de repli est simplement moins détaillée sans lui, jamais
+            // fausse (mêmes lignes que « Épingler les données en bulle », cf. graphDataBubble.js).
+            pipelineSummary: store.reviewSummaryCache[n.reviewId]?.pipelineSummary || null
+        })));
+        setCopied(true);
+        toast.success(`${label} copié — clic droit sur le fond pour coller`);
+        setTimeout(onClose, 500);
     };
 
     const mediaCount = Array.isArray(node?.media) ? node.media.length : 0;
@@ -147,6 +176,12 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                             🧬 Voir la généalogie
                         </button>
                     )}
+                    <button className="context-menu-item" onClick={handleCopyElement}>
+                        <Copy size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        {copied
+                            ? 'Copié !'
+                            : `Copier ${actionTargets.length > 1 ? `les ${actionTargets.length} produits` : 'ce produit'}`}
+                    </button>
                     <button className="context-menu-item" onClick={handleDuplicate}>
                         📋 Dupliquer
                     </button>

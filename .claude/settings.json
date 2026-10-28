@@ -155,5 +155,20 @@
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",
       "C:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker"
     ]
+  },
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/precompact-snapshot.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Snapshot avant compactage..."
+          }
+        ]
+      }
+    ]
   }
 }

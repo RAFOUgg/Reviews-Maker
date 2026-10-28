@@ -289,3 +289,11 @@ Par effort croissant : `AdminPanel.jsx` (déjà 24 réf. Liquid, ~14 contrôles 
 - Ne jamais committer sans demande explicite de l'utilisateur.
 - Toujours lire un fichier avant de l'éditer.
 - Accès VPS : `ssh vps-lafoncedalle` (clé déjà configurée) ; déploiement via `./deploy.sh "msg"` en local (build+commit+push+SSH deploy) ou `bash deploy.sh --vps` directement sur le VPS.
+
+## Mode de travail économe en tokens (ajouté 2026-10-27)
+
+- **Style réponses** : concis, listes/commandes, pas de politesse ni transitions. Pourquoi en ≤5 mots avant chaque commande.
+- **Lecture ciblée** : `Grep`/`offset+limit` avant tout `Read` complet ; jamais relire un fichier déjà lu ou juste édité.
+- **Pas d'agents** sauf demande explicite (chaque agent redémarre à froid).
+- **Sorties shell bornées** : `| head`, `--quiet`, pas de dump de build/log complet.
+- **Multi-sessions ≤ ~40k tokens** : 1 session = 1 chantier. En fin de chantier : résumé 5-10 lignes en mémoire (`memory/`), puis nouvelle session. Ne pas ajouter de récit détaillé de correctif dans ce fichier — il est chargé à chaque session ; l'historique va en mémoire.

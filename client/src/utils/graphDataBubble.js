@@ -242,6 +242,23 @@ export function buildGeneticsEdgeBubble(edge, { parentName = null, childName = n
 }
 
 /**
+ * Marqueur de la ligne technique qu'ajoute le presse-papiers d'ÉLÉMENTS (graphElementClipboard.js)
+ * à la fin du texte lisible : elle porte l'élément complet (médias, cellules attachées, review
+ * liée) que le texte, lui, ne peut pas transporter. Le format du texte étant défini ICI, le
+ * marqueur l'est aussi — sans quoi les deux modules en tiendraient chacun une transcription, et
+ * une divergence rendrait la ligne visible sur les bulles au lieu d'être retirée.
+ */
+export const ELEMENT_CLIPBOARD_MARKER = '[terpologie:element]'
+
+/** Le même texte débarrassé de sa ligne technique. */
+export function stripElementPayload(text) {
+    return String(text || '')
+        .split(/\r?\n/)
+        .filter(l => !l.trim().startsWith(ELEMENT_CLIPBOARD_MARKER))
+        .join('\n')
+}
+
+/**
  * Texte affichable d'une bulle — l'inverse exact de `parsePastedBubble` ci-dessous.
  *
  * Un intertitre (`group: true`) n'a PAS de valeur : le concaténer comme une ligne de données
@@ -269,7 +286,10 @@ export function bubbleToText({ title, body } = {}) {
  * gardés tels quels.
  */
 export function parsePastedBubble(text, { defaultTitle = 'Données collées' } = {}) {
-    const rows = String(text || '')
+    // Un texte copié depuis un ÉLÉMENT porte en dernière ligne son propre contenu sérialisé
+    // (cf. ELEMENT_CLIPBOARD_MARKER) : il est retiré ici, sinon coller un élément en bulle
+    // afficherait une ligne de JSON brut sur la carte.
+    const rows = stripElementPayload(text)
         .replace(/\r\n?/g, '\n')
         .split('\n')
         .map(l => l.trim())
