@@ -16,7 +16,7 @@ Règle : 1 lot = 1 session ≤ 40k tokens = 1 branche `mvp/Lx-nom`, empilée sur
 2. Ne jamais deviner un nom de champ : vérifier `fieldRegistry.js`, `DEFAULT_CONFIG.contentModules`, `*SidebarContent.js` (bug reproduit 8 fois). `review.type` n'a PAS de forme uniforme (`Fleurs`, `hash`, `concentrate`, `edible`…) : toujours normaliser.
 3. **Barrières, toutes obligatoires avant un commit** : `cd client && npm run lint:critical` (0 erreur hors fichiers listés comme mortes), `npm run build`, et les sondes `tools/export-audit/*.mjs` touchant la zone modifiée. Le build NE détecte PAS une variable non définie — seul `lint:critical` la voit.
 4. Tout changement de rendu → vérif Playwright + capture réelle, pas juste le DOM.
-5. Aucune écriture directe en base pour contourner l'auth (`isPublic` etc.) — fixture jetable via la route de création (`tools/export-audit/fixtures.mjs`), supprimée en fin de sonde.
+5. Aucune écriture directe en base pour contourner l'auth (`isPublic` etc.) — fixture jetable via la route de création (`tools/export-audit/fixtures.mjs`), supprimée en fin de sonde. **Sur le VPS, `localhost:3000` est l'API de PRODUCTION.** Ne jamais y lancer une sonde ni un serveur de test : passer par `node tools/export-audit/run-all.mjs` (pile isolée : API dev :3199 + base SQLite jetable + Vite :5199, variables `AUDIT_BASE`/`AUDIT_API`/`VITE_API_PROXY_TARGET`). Chromium peut manquer de bibliothèques système sur le VPS : voir l'en-tête de `run-all.mjs`.
 6. **Tests serveur** : en `NODE_ENV=development`, `requireAuth`/`optionalAuth` injectent un utilisateur de test auteur de toutes les fixtures → pour tester un VISITEUR anonyme, lancer un 2e serveur `NODE_ENV=test PORT=39xx`.
 7. Toute migration Prisma : générée par `npx prisma migrate diff --from-schema-datasource … --to-schema-datamodel … --script` dans `prisma/migrations/<horodatage>_<nom>/` (`migrate dev` refuse le mode non interactif), appliquée en local par `migrate deploy`. `deploy.sh` l'applique en prod.
 8. Fin de lot : résumé 5-10 lignes en mémoire (ou dans la description de branche pour Hermes) et mise à jour de la ligne `Statut :`.
@@ -49,7 +49,7 @@ L21 → L22 → L23 → L24 → L12a → L19 → L18 → L5 → L9 → L14 → L
 La première nuit, L20 intègre aussi les branches en attente (L4, L16, L6-L8) même si aucun lot n'a pu être fait.
 
 ### L21 — Sondes fiables (nouveau)
-Statut : prêt — deploy main final
+Statut : prêt — deploy main final — EN COURS sur `mvp/L21-nouvelles-sondes` (commit wip `74e70add` : sondes paramétrées par `AUDIT_BASE`/`AUDIT_API`, `run-all.mjs` à pile isolée ; reste : réécrire `pdf-check`/`format-check`, faire passer `run-all`). Reprendre sur cette branche, ne pas recommencer.
 - `pdf-check.mjs` et `format-check.mjs` sont PÉRIMÉES (datent du 2026-08-11 ; cherchent les boutons « A4 (Document) »/« Écran » déplacés le 2026-08-13 dans la modale d'export `ExportModal.jsx`/`RatioSelector.jsx`) → les réécrire sur l'UI actuelle.
 - `tools/export-audit/run-all.mjs` : lance toutes les sondes en série (une fixture chacune), résumé OK/KO par sonde, code de sortie ≠ 0 si un KO. C'est la barrière de L20.
 - **Accepté si** : `run-all` vert sur `mvp/L6-couleurs` ; toute sonde rouge est soit corrigée (sonde périmée) soit signalée (bug produit réel, alors STOP et rapport).
@@ -120,7 +120,7 @@ Statut : prêt — deploy main final
 ### L20 — Intégration + déploiement final (nouveau, en fin de CHAQUE nuit)
 Statut : prêt — deploy main final
 - Sur la dernière branche de la nuit : `lint:critical` = 0, `npm run build` vert, `node tools/export-audit/run-all.mjs` vert, serveur local démarré (`/api/health` 200) avec les migrations appliquées.
-- Si tout est vert : fast-forward de `main` sur cette branche, `git push origin main`, puis déploiement par `timeout 300 ssh vps-lafoncedalle "cd ~/Reviews-Maker && bash deploy.sh --vps 2>&1"` (ou `bash deploy.sh --vps` directement sur le VPS). Puis contrôle externe : `/api/health` 200, page d'accueil 200, `/api/admin/check-auth` anonyme → `isAdmin:false`, `/l/<code inconnu>` → 404 API.
+- Si tout est vert : fast-forward de `main` sur cette branche, `git push origin main`, puis déploiement — **pour Hermes (utilisateur `hermes` sur le VPS)** : `ssh -i ~/.ssh/deploy_key ubuntu@localhost` (clé restreinte côté `ubuntu` à la seule commande `cd ~/Reviews-Maker && bash deploy.sh --vps`, aucun autre argument n'est exécuté) ; depuis le poste de dev : `timeout 300 ssh vps-lafoncedalle "cd ~/Reviews-Maker && bash deploy.sh --vps 2>&1"`. Puis contrôle externe : `/api/health` 200, page d'accueil 200, `/api/admin/check-auth` anonyme → `isAdmin:false`, `/l/<code inconnu>` → 404 API.
 - Si une barrière est rouge : RIEN n'est mergé ni déployé ; rapport au matin avec la barrière fautive.
 - ⚠ La première exécution contient des lots encore « PR ouverte » (L4, L16, L6-L8) que l'humain a autorisés au déploiement final le 2026-10-28 sans les avoir relus un par un.
 - **Accepté si** : prod à jour, contrôles externes verts, rapport rédigé.
