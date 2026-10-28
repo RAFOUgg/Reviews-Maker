@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import PropTypes from 'prop-types';
 import SingleReviewCard from '../../export/SingleReviewCard';
-import { RATIO_DIMENSIONS, SCREEN_RATIOS } from '../../../utils/exportMakerHelpers';
 
 /**
  * Aperçu du mode ÉCRAN d'Export Maker (C10-3) — la fiche telle qu'elle s'affiche en ligne,
@@ -48,11 +46,14 @@ import { RATIO_DIMENSIONS, SCREEN_RATIOS } from '../../../utils/exportMakerHelpe
  * 2026-08-16 : 8 paires de blocs côte à côte à 1600px de large, aucune à 420px, sans mise à l'échelle.
  */
 
-const ICONES = { 'ecran-pc': '🖥️', 'ecran-mobile': '📱' };
-
+/*
+ * 2026-10-28 : format AUTOMATIQUE, plus de choix « Ordinateur / Téléphone » ni de bandeau
+ * explicatif (« mode téléphone / pc automatique (plus un choix utilisateur) (retire les boutons) »).
+ * L'aperçu prend toute la largeur du panneau ; `SingleReviewCard` en déduit seul la mise en page
+ * (seuil 760px), exactement comme sur un vrai appareil — réduire la fenêtre montre le rendu
+ * téléphone.
+ */
 export default function ScreenPreviewPane({ reviewData, config, onReorderBlocks }) {
-    const [format, setFormat] = useState('ecran-pc');
-
     if (!reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
@@ -62,59 +63,20 @@ export default function ScreenPreviewPane({ reviewData, config, onReorderBlocks 
     }
 
     // Le ratio de fichier enregistré sur la review n'a aucun sens ici : on lui substitue un format
-    // d'écran, sans toucher à la config sauvegardée (l'export continue de lire la sienne).
-    //
-    // Le sélecteur ne fait que CONTRAINDRE LA LARGEUR du cadre : c'est ensuite `SingleReviewCard`
-    // qui déduit de la largeur réelle s'il faut une mise en page d'ordinateur ou de téléphone, et
-    // qui recompose. On emprunte donc exactement le chemin d'un vrai appareil de cette largeur,
-    // plutôt qu'un mode d'aperçu parallèle qui pourrait mentir.
-    const configEcran = { ...config, ratio: format };
-    const dims = RATIO_DIMENSIONS[format];
+    // d'écran (la largeur réelle tranche ensuite), sans toucher à la config sauvegardée.
+    const configEcran = { ...config, ratio: 'ecran-pc' };
 
     return (
         <div className="w-full h-full flex flex-col bg-[#0a0a0f]">
-            {/* Ce que ce mode est, écrit noir sur blanc. « Je n'ai pas accès aux différentes pages
-                en mode écran ? c'est normal ? » (2026-08-11) : oui, et rien ne le disait. Le
-                bandeau est HORS de la zone défilante pour ne pas rogner la hauteur sur laquelle
-                l'aperçu se met à l'échelle. */}
-            <div className="flex-shrink-0 px-4 py-2 border-b border-white/10 flex items-center gap-3 flex-wrap">
-                <div className="text-[11px] leading-snug text-white/45 flex-1 min-w-[220px]">
-                    <span className="text-white/70 font-semibold">Mode Écran</span> — la fiche telle qu'elle
-                    s'affiche en ligne : un document continu, sans pages ni marges d'impression.
-                    Pagination et formats de fichier se règlent à l'<span className="text-white/70 font-semibold">exportation</span>.
-                    {onReorderBlocks && <> Survolez un bloc et saisissez sa poignée <span className="text-white/70">⠿</span> pour le déplacer.</>}
-                </div>
-                <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-                    {SCREEN_RATIOS.map((r) => (
-                        <button
-                            key={r}
-                            onClick={() => setFormat(r)}
-                            aria-pressed={format === r}
-                            // 44px de haut : même cible tactile que le reste des contrôles du Studio.
-                            className={`px-3 h-[44px] rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                                format === r ? 'bg-violet-600 text-white' : 'text-white/60 hover:bg-white/10 hover:text-white/90'
-                            }`}
-                        >
-                            <span>{ICONES[r]}</span>
-                            <span>{RATIO_DIMENSIONS[r].label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* `fitHeight` n'est PAS passé — une fiche en ligne défile, l'écraser pour la faire tenir
+                dans le panneau donnerait un aperçu qui ne ressemble à rien de réel. */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4">
-                {/* La zone est bornée à la largeur du format choisi : un téléphone doit se voir
-                    étroit, sinon le sélecteur ne montrerait aucune différence de mise en page.
-                    `fitHeight` n'est PAS passé — une fiche en ligne défile, l'écraser pour la faire
-                    tenir dans le panneau donnerait un aperçu qui ne ressemble à rien de réel. */}
-                <div className="mx-auto" style={{ maxWidth: dims.width }}>
-                    <SingleReviewCard
-                        key={format}
-                        reviewData={reviewData}
-                        config={configEcran}
-                        canvasId="export-maker-screen-canvas"
-                        onReorderBlocks={onReorderBlocks}
-                    />
-                </div>
+                <SingleReviewCard
+                    reviewData={reviewData}
+                    config={configEcran}
+                    canvasId="export-maker-screen-canvas"
+                    onReorderBlocks={onReorderBlocks}
+                />
             </div>
         </div>
     );

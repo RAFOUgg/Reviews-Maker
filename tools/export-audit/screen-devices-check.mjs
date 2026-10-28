@@ -105,14 +105,18 @@ try {
     const ecran = p.locator('button', { hasText: /^.?\s*Écran$/ }).first();
     if (await ecran.count()) { await ecran.click(); await sleep(3000); }
 
+    // 2026-10-28 : le format d'écran est AUTOMATIQUE (déduit de la largeur réelle). Plus de bouton
+    // Ordinateur/Téléphone, plus de bandeau « Mode Écran — … » : leur présence est un défaut.
     const boutons = await p.locator('button', { hasText: /Ordinateur|Téléphone/ }).count();
-    console.log(`sélecteurs d'appareil trouvés : ${boutons}`);
-    if (boutons < 2) {
-        console.log('boutons visibles :', (await p.locator('button').allTextContents()).slice(0, 30).join(' | '));
-        throw new Error('le sélecteur PC/téléphone n’est pas atteignable — la sonde ne mesure rien');
-    }
+    const bandeau = await p.getByText('sans pages ni marges').count();
+    console.log(`sélecteurs d'appareil : ${boutons} · bandeau : ${bandeau}`);
+    if (boutons > 0) { console.log('KO — sélecteur PC/téléphone encore présent'); ko++; }
+    if (bandeau > 0) { console.log('KO — bandeau « Mode Écran » encore présent'); ko++; }
+    // Un appareil = une largeur de fenêtre : c'est la seule chose qui choisit le format désormais.
+    const asPc = async () => { await p.setViewportSize({ width: 1800, height: 1000 }); await sleep(3000); };
+    const asTel = async () => { await p.setViewportSize({ width: 1100, height: 1000 }); await sleep(3000); };
 
-    await p.locator('button', { hasText: 'Ordinateur' }).first().click(); await sleep(3500);
+    await asPc();
     await p.screenshot({ path: 'tools/export-audit/reports/screen-pc.png' });
     const pc = await mesurer();
     console.log('PC       :', JSON.stringify(pc));
@@ -120,7 +124,7 @@ try {
     const dispoPc = await disposition();
     console.log('  disposition PC       :', JSON.stringify(dispoPc));
 
-    await p.locator('button', { hasText: 'Téléphone' }).first().click(); await sleep(3500);
+    await asTel();
     const tel = await mesurer();
     console.log('Téléphone:', JSON.stringify(tel));
     const dispoTel = await disposition();
@@ -151,15 +155,15 @@ try {
         if (!(await bouton.count())) { console.log(`— ${nom} : absent du sélecteur`); continue; }
         await bouton.click(); await sleep(4000);
 
-        await p.locator('button', { hasText: 'Ordinateur' }).first().click(); await sleep(3000);
+        await asPc();
         const dPc = await disposition();
-        await p.locator('button', { hasText: 'Téléphone' }).first().click(); await sleep(3000);
+        await asTel();
         const dTel = await disposition();
         console.log(`${nom.padEnd(26)} PC ${dPc.cotesACote} paire(s) côte à côte · Téléphone ${dTel.cotesACote} paire(s), ${dTel.pleineLargeur}/${dTel.blocs} pleine largeur`);
         if (dTel.etroits?.length) console.log(`     étroits sur téléphone : ${dTel.etroits.join(', ')}`);
         const fichier = nom.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '');
         await p.screenshot({ path: `tools/export-audit/reports/ecran-${fichier}-tel.png` });
-        await p.locator('button', { hasText: 'Ordinateur' }).first().click(); await sleep(2500);
+        await asPc();
         await p.screenshot({ path: `tools/export-audit/reports/ecran-${fichier}-pc.png` });
 
         if (dTel.cotesACote > 0) { console.log(`  KO — ${nom} n’est pas empilé sur téléphone`); ko++; }
