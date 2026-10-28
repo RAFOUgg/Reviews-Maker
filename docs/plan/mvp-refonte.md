@@ -43,19 +43,19 @@ Statut : fait (2026-10-28, 10 correctifs déployés ; reste : ligne `ADMIN_MODE`
 - **Accepté si** : chaque route sensible testée par curl sans session → 401/403.
 
 ### L1 — Corrections rapides formulaires/pipelines
-Statut : à faire
+Statut : PR ouverte — fait par Claude 2026-10-28, à valider (déjà sur main ; non vérifié visuellement : curseurs puissance, légendes de bornes)
 - Pipelines : « Définir une évolution… » désactivé si < 2 cellules sélectionnées (`CellContextMenu.jsx` ~l.204, `PipelineDragDropView.jsx`).
 - Jauges chiffrées : min/max explicites affichés (densité, dureté, collant, viscosité, résidus, melting au toucher, intensité gustative, agressivité/piquant). Lire les définitions réelles, ne pas inventer d'échelle.
 - Effets : puissance /10 par effet (nouveau champ → schéma Prisma + routes des 4 types + `fieldRegistry.js`).
 - **Accepté si** : sonde `curve-check.mjs` adaptée (1 cellule → entrée inactive) ; champ puissance persisté puis relu en base après rechargement.
 
 ### L2 — Export Maker : mode écran automatique
-Statut : à faire
+Statut : PR ouverte — fait par Claude 2026-10-28, à valider (sur main ; screen-devices-check vert)
 - Retirer les boutons PC/Téléphone et le bandeau « Mode Écran — la fiche telle qu'elle s'affiche en ligne… » (`ScreenPreviewPane.jsx`). Format déduit de la largeur (déjà le cas dans `SingleReviewCard`, seuil 760px).
 - **Accepté si** : `screen-devices-check.mjs` vert ; texte du bandeau absent du DOM.
 
 ### L16 — Code de lot + QR (parcours C)
-Statut : à faire
+Statut : PR ouverte — fait par Claude 2026-10-28 sur `mvp/L16-code-lot`, à valider (lot-code-check vert)
 - `Review.shareCode String? @unique` (absent aujourd'hui ; convention déjà utilisée par `GeneticTree`/`ProductionChain`/`TemplateShare` dans `schema.prisma`). Généré au passage en public ; réutiliser le générateur existant (grep `shareCode` dans `server-new/routes/genetics.js` / `production-chains.js`).
 - Route courte `/l/:code` → `/r/:id` : `GET /api/reviews/by-code/:code` côté serveur, droits via `resolveReviewForRead()` (`routes/reviews.js`).
 - Étiquette imprimable (QR + code lisible + nom) : `qrcode.react` déjà présent ; QR déjà rendu dans `TraceabilityReportTemplate.jsx`/`DetailedCardTemplate.jsx` → les faire pointer sur `/l/:code`.
@@ -108,7 +108,7 @@ Statut : à faire
 - **Accepté si** : `mobile-forms-check.mjs` étendue — chaque section du mode normal a son équivalent en mode auto (390×844).
 
 ### L4 — Galerie publique : lisibilité + social de base
-Statut : à faire
+Statut : PR ouverte — fait par Claude 2026-10-28 sur `mvp/L4-galerie`, à valider (gallery-card-check vert)
 - Pseudo auteur cliquable → `ProfileModal`. Carte : Séparation = % cannabinoïde max + maillage + farm ; Fleur = producteur + strain + % max (`HomeReviewCard.jsx`).
 - Likes : `ReviewLike` existe → câbler UI + compteur profil (`totalLikes`).
 - **Accepté si** : like persisté et compté, profil ouvert au clic, infos visibles sur cartes Fleur et Hash réelles.
