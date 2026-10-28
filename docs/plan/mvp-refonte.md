@@ -56,7 +56,7 @@ Statut : fait, **déployé** (2026-10-28 22:07, main `86ef3b92`). Barrières ver
 - **Accepté si** : `run-all` vert sur `mvp/L6-couleurs` ; toute sonde rouge est soit corrigée (sonde périmée) soit signalée (bug produit réel, alors STOP et rapport).
 
 ### L22 — Dette sécurité résiduelle (nouveau, suite de L11)
-Statut : prêt — deploy main final
+Statut : PR ouverte (2026-10-28 nuit, Hermes) — branche `mvp/L22-dette-securite` (depuis `main` 6b4b7479), **non mergée** (L20 décidé par l'humain). Critères L22 atteints : audit prod 14 → 8, plus aucune critique/haute corrigeable sans `--force` (restent `tar` via `sqlite3@5`/`connect-sqlite3` et `nodemailer` ≥ 10.2.1, majeure) ; `node server.js` démarre (health 200) ; 429 en rafale sur un commentaire (anonyme et connecté, sonde `write-limits-check.mjs`). ⚠ Barrières rouges HORS lot, héritées de `main` : `lint:critical` 4 erreurs + `data-bubble`/`mobile-canvas` KO, toutes = `pinTargets` non défini (commit `6b4b7479`, item L24, non déployé en prod) ; `phenohunt-parity` KO puis vert relancé seul (mesure à 600 ms pendant une transition). `run-all` 41/44.
 - `npm audit fix` (SANS `--force`) côté `server-new` : 15 vulns dont `proxy-addr` (critique, usurpation d'IP → contourne le rate limit), `tar`, `nodemailer` ; puis **démarrer le vrai process** (`node server.js`, health 200) — cf. mémoire « dépendance fantôme uuid a planté la prod ».
 - Rate limiting des écritures hors auth : commentaires, likes, uploads, `POST /api/reviews/:id/share-code`.
 - `DELETE /api/pipeline-github/:id` fait `include: { review }` alors que `PipelineGithub` n'a pas cette relation → plante à l'appel ; corriger (contrôle via `prisma.review.findUnique` comme le GET).
