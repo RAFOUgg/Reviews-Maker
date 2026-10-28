@@ -5,23 +5,15 @@ import { reviewProducerVerification } from '../services/account.js'
 const router = express.Router()
 const prisma = new PrismaClient()
 
-// ADMIN_MODE donne les droits admin à TOUT appelant, même anonyme. Il n'est honoré qu'en
-// développement : posé en production (constaté le 2026-10-28 — /api/admin/check-auth répondait
-// {"isAdmin":true,"authenticated":false} à un visiteur sans session), il ouvrait tout le panneau
-// admin à n'importe qui.
-const adminModeBypass = () => process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV === 'development'
-if (process.env.ADMIN_MODE === 'true' && process.env.NODE_ENV !== 'development') {
-    console.warn('[admin] ADMIN_MODE=true ignoré hors NODE_ENV=development — retirez-le du .env de production')
+// Pas de contournement par variable d'environnement : l'ancien ADMIN_MODE donnait les droits admin
+// à TOUT appelant, même anonyme, et s'est retrouvé actif en production (constaté le 2026-10-28).
+// Seul le rôle 'admin' du compte connecté ouvre ces routes, en dev comme en prod.
+if (process.env.ADMIN_MODE) {
+    console.warn('[admin] ADMIN_MODE n\'existe plus et est ignoré — retirez-le du .env')
 }
 
 // Middleware to check admin access
 const requireAdmin = (req, res, next) => {
-    // Development mode: check ADMIN_MODE env variable
-    if (adminModeBypass()) {
-        return next()
-    }
-
-    // Production: check authentication and admin role
     if (!req.user) {
         return res.status(401).json({ error: 'Not authenticated' })
     }
@@ -53,7 +45,7 @@ router.get('/check-auth', async (req, res) => {
             ? (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
             : []
         const roleList = Array.isArray(parsedRoles) ? parsedRoles : (Array.isArray(parsedRoles?.roles) ? parsedRoles.roles : [])
-        const isAdmin = adminModeBypass() || roleList.includes('admin')
+        const isAdmin = roleList.includes('admin')
 
         if (!isAdmin) {
             return res.status(401).json({

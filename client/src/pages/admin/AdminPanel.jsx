@@ -22,7 +22,7 @@ export default function AdminPanel() {
 
     useEffect(() => {
         console.log('🔧 AdminPanel useEffect - checking auth...')
-        console.log('🔧 ADMIN_MODE check starting...')
+        console.log('🔧 vérification des droits admin...')
         checkAuth()
         fetchUsers()
         fetchStats()
@@ -73,7 +73,7 @@ export default function AdminPanel() {
             console.log('🔐 Response data:', data)
             if (!response.ok) {
                 console.log('🔐 Auth failed (', response.status, ') - setting authError to true')
-                console.log('🔐 ADMIN_MODE likely not enabled on server')
+                console.log('🔐 compte sans rôle admin')
                 setAuthError(true)
             } else {
                 console.log('✅ Auth successful - admin access granted')
@@ -202,7 +202,7 @@ export default function AdminPanel() {
                         <p className="text-gray-300 text-sm">You need to be logged in as an administrator to access this panel.</p>
                         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs text-gray-400 space-y-1">
                             <p><strong>Troubleshooting:</strong></p>
-                            <p>• Ensure ADMIN_MODE is enabled on server</p>
+                            <p>• Connectez-vous avec un compte qui a le rôle admin</p>
                             <p>• Check browser console (F12) for API errors</p>
                             <p>• Try refreshing page (Ctrl+Shift+R)</p>
                         </div>
