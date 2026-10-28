@@ -93,6 +93,7 @@ export function useHashForm(reviewId = null) {
                 onset: hd.monteeRapidite ?? 0,
                 intensity: hd.intensiteEffets ?? 0,
                 effects: parseArr(hd.effetsChoisis, []),
+                effectsPower: (() => { try { const o = typeof hd.effetsPuissance === 'string' ? JSON.parse(hd.effetsPuissance) : hd.effetsPuissance; return o && typeof o === 'object' && !Array.isArray(o) ? o : {} } catch { return {} } })(),
                 methodeConsommation: hd.methodeConsommation ?? '',
                 dosageUtilise: hd.dosageUtilise ?? '',
                 dosageUnite: hd.dosageUnit ?? 'g',

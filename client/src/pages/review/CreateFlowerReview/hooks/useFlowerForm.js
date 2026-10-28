@@ -136,6 +136,7 @@ export function useFlowerForm(reviewId = null) {
                 intensity: fd.intensiteEffetScore ?? 0,
                 duration: fd.effectDuration ?? '',
                 effects: parseArr(fd.effetsChoisis, []),
+                effectsPower: (() => { try { const o = typeof fd.effetsPuissance === 'string' ? JSON.parse(fd.effetsPuissance) : fd.effetsPuissance; return o && typeof o === 'object' && !Array.isArray(o) ? o : {} } catch { return {} } })(),
                 methodeConsommation: fd.consumptionMethod ?? '',
                 dosageUtilise: fd.dosage ?? '',
                 dosageUnite: fd.dosageUnit ?? 'g',

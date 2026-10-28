@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
+import { ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS, getAllEffects } from '../../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../../data/formValues';
 import { Zap, Clock, Beaker, ChevronDown } from 'lucide-react';
 import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
@@ -22,6 +22,10 @@ export default function EffectsSection({ productType, data: directData, onChange
     const [intensity, setIntensity] = useState(effectsData?.intensity || 5);
     const [duration, setDuration] = useState(effectsData?.duration || '1-2h');
     const [selectedEffects, setSelectedEffects] = useState(effectsData?.effects || []);
+    // Puissance relative de chaque effet choisi (1-10) : sans elle, « relaxant » et « euphorique »
+    // cochés ensemble pèsent pareil, alors que l'un peut dominer nettement l'autre.
+    const [effectsPower, setEffectsPower] = useState(effectsData?.effectsPower || {});
+    const effectLabels = React.useMemo(() => Object.fromEntries(getAllEffects().map((e) => [e.id, e.name || e.label || e.id])), []);
 
     const [methodeConsommation, setMethodeConsommation] = useState(effectsData?.methodeConsommation || (isEdible ? 'comestible' : ''));
     const [dosageUtilise, setDosageUtilise] = useState(effectsData?.dosageUtilise || '');
@@ -49,6 +53,8 @@ export default function EffectsSection({ productType, data: directData, onChange
             intensity,
             duration,
             effects: selectedEffects,
+            // Seulement les effets encore cochés — décocher un effet retire sa puissance.
+            effectsPower: Object.fromEntries(Object.entries(effectsPower).filter(([id]) => selectedEffects.includes(id))),
             methodeConsommation,
             dosageUtilise,
             dosageUnite,
@@ -73,6 +79,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                 intensity: effectsData?.intensity || 5,
                 duration: effectsData?.duration || '1-2h',
                 effects: effectsData?.effects || [],
+                effectsPower: Object.fromEntries(Object.entries(effectsData?.effectsPower || {}).filter(([id]) => (effectsData?.effects || []).includes(id))),
                 methodeConsommation: effectsData?.methodeConsommation || (isEdible ? 'comestible' : ''),
                 dosageUtilise: effectsData?.dosageUtilise || '',
                 dosageUnite: effectsData?.dosageUnite || (isEdible ? 'mg' : 'g'),
@@ -95,7 +102,7 @@ export default function EffectsSection({ productType, data: directData, onChange
         }
 
         updateHandler(payload);
-    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, foodIntakeStatus]);
+    }, [onset, intensity, duration, selectedEffects, effectsPower, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, foodIntakeStatus]);
 
     const toggleMultiSelect = (key, value) => {
         if (key === 'profilsEffets') {
@@ -278,6 +285,36 @@ export default function EffectsSection({ productType, data: directData, onChange
                 title="💥 Sélectionner des effets"
                 helper="Choisissez jusqu'à 8 effets ressentis"
             />
+
+            {selectedEffects.length > 0 && (
+                <div className="space-y-3" data-effects-power>
+                    <div>
+                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">Puissance de chaque effet</h4>
+                        <p className="text-xs text-white/50">Calibrez les effets entre eux : 1 = à peine perceptible, 10 = dominant.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {selectedEffects.map((id) => (
+                            <div key={id} className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                                <LiquidSlider
+                                    label={effectLabels[id] || id}
+                                    value={effectsPower[id] || 0}
+                                    min={0}
+                                    max={10}
+                                    step={1}
+                                    color="cyan"
+                                    minLabel="À peine perceptible"
+                                    maxLabel="Dominant"
+                                    onChange={(val) => setEffectsPower((prev) => {
+                                        const next = { ...prev };
+                                        if (val > 0) next[id] = val; else delete next[id];
+                                        return next;
+                                    })}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             <LiquidDivider />
 
             <div className="p-3 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">

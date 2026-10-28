@@ -224,6 +224,8 @@ const REGISTRY = [
     { key: 'monteeScore', label: 'Montée', group: 'effects', type: 'score', cat: 'effects', sources: ['monteeScore', 'montee', 'monteeRapidite'] },
     { key: 'intensiteEffetScore', label: 'Intensité effet', group: 'effects', type: 'score', cat: 'effects', sources: ['intensiteEffetScore', 'intensiteEffet', 'effectsIntensity', 'intensiteEffets'] },
     { key: 'effects', label: 'Effets ressentis', group: 'effects', type: 'list', sources: ['effetsChoisis', 'effects'] },
+    // Liste dérivée par exportDataAdapter (effectsPowerList) depuis effetsPuissance { id: 1-10 }.
+    { key: 'effectsPower', label: 'Puissance des effets', group: 'effects', type: 'list', sources: ['effetsPuissanceListe'] },
     { key: 'dureeEffet', label: 'Durée des effets', group: 'effects', type: 'text', sources: ['dureeEffets', 'effectDuration', 'effectLength', 'dureeEffet'] },
 
     // ── USAGE (jamais rendu auparavant) ───────────────────────────────────────────
@@ -308,6 +310,8 @@ export function getFieldLabel(key) {
 // Clés jamais éligibles au fallback générique : bookkeeping, identité de la Review, objets
 // relationnels imbriqués, doublons de sous-table déjà aplatis ailleurs.
 const PROTECTED_ROOT_KEYS = new Set([
+    // Puissance des effets : rendue via la liste dérivée « effectsPower », jamais en brut.
+    'effetsPuissance', 'effectsPower', 'effetsPuissanceListe',
     'id', 'reviewId', 'authorId', 'createdAt', 'updatedAt', 'isPublic', 'producerProfileId',
     'type', 'holderName', 'review', 'flowerData', 'hashData', 'concentrateData', 'edibleData',
     'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'exportMakerConfig',

@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
-import { validateReviewId } from '../utils/validation.js'
+import { validateReviewId, sanitizeEffectsPower } from '../utils/validation.js'
 import {
     requireSectionAccess,
     requirePhenoHunt,
@@ -494,6 +494,11 @@ function validateFlowerReviewData(data, options = {}) {
     }
 
     // Effets choisis (JSON array max 8)
+    // Puissance relative de chaque effet (1-10), cf. sanitizeEffectsPower
+    if (data.effetsPuissance !== undefined) {
+        const power = sanitizeEffectsPower(data.effetsPuissance)
+        if (power !== undefined) cleaned.effetsPuissance = power
+    }
     if (data.effetsChoisis) {
         if (typeof data.effetsChoisis === 'string') {
             try {
@@ -822,6 +827,7 @@ router.post('/',
             inhalationNotes: result.flowerReview.inhalationNotes ? JSON.parse(result.flowerReview.inhalationNotes) : null,
             expirationNotes: result.flowerReview.expirationNotes ? JSON.parse(result.flowerReview.expirationNotes) : null,
             effetsChoisis: result.flowerReview.effetsChoisis ? JSON.parse(result.flowerReview.effetsChoisis) : null,
+            effetsPuissance: result.flowerReview.effetsPuissance ? JSON.parse(result.flowerReview.effetsPuissance) : null,
             effectProfiles: result.flowerReview.effectProfiles ? JSON.parse(result.flowerReview.effectProfiles) : null,
             sideEffects: result.flowerReview.sideEffects ? JSON.parse(result.flowerReview.sideEffects) : null,
             preferredUse: result.flowerReview.preferredUse ? JSON.parse(result.flowerReview.preferredUse) : null,
@@ -899,6 +905,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
             inhalationNotes: review.flowerData.inhalationNotes ? JSON.parse(review.flowerData.inhalationNotes) : null,
             expirationNotes: review.flowerData.expirationNotes ? JSON.parse(review.flowerData.expirationNotes) : null,
             effetsChoisis: review.flowerData.effetsChoisis ? JSON.parse(review.flowerData.effetsChoisis) : null,
+            effetsPuissance: review.flowerData.effetsPuissance ? JSON.parse(review.flowerData.effetsPuissance) : null,
             effectProfiles: review.flowerData.effectProfiles ? JSON.parse(review.flowerData.effectProfiles) : null,
             sideEffects: review.flowerData.sideEffects ? JSON.parse(review.flowerData.sideEffects) : null,
             preferredUse: review.flowerData.preferredUse ? JSON.parse(review.flowerData.preferredUse) : null,
@@ -1159,6 +1166,7 @@ router.put('/:id',
             inhalationNotes: result.flowerReview.inhalationNotes ? JSON.parse(result.flowerReview.inhalationNotes) : null,
             expirationNotes: result.flowerReview.expirationNotes ? JSON.parse(result.flowerReview.expirationNotes) : null,
             effetsChoisis: result.flowerReview.effetsChoisis ? JSON.parse(result.flowerReview.effetsChoisis) : null,
+            effetsPuissance: result.flowerReview.effetsPuissance ? JSON.parse(result.flowerReview.effetsPuissance) : null,
             effectProfiles: result.flowerReview.effectProfiles ? JSON.parse(result.flowerReview.effectProfiles) : null,
             sideEffects: result.flowerReview.sideEffects ? JSON.parse(result.flowerReview.sideEffects) : null,
             preferredUse: result.flowerReview.preferredUse ? JSON.parse(result.flowerReview.preferredUse) : null,

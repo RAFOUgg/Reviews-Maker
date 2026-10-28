@@ -93,6 +93,7 @@ export function useConcentrateForm(reviewId = null) {
                 onset: cd.monteeRapidite ?? 0,
                 intensity: cd.intensiteEffets ?? 0,
                 effects: parseArr(cd.effetsChoisis, []),
+                effectsPower: (() => { try { const o = typeof cd.effetsPuissance === 'string' ? JSON.parse(cd.effetsPuissance) : cd.effetsPuissance; return o && typeof o === 'object' && !Array.isArray(o) ? o : {} } catch { return {} } })(),
                 methodeConsommation: cd.methodeConsommation ?? '',
                 // dosageUtilise/dureeEffets existent en DB (colonnes String simples, même schéma
                 // que HashReview) mais manquaient ici : EffectsSection retombait à '' / 'moyenne'

@@ -54,6 +54,7 @@ export function useEdibleForm(reviewId = null) {
                 onset: ed.monteeRapidite ?? 0,
                 intensity: ed.intensiteEffets ?? 0,
                 effects: parseArr(ed.effetsChoisis, []),
+                effectsPower: (() => { try { const o = typeof ed.effetsPuissance === 'string' ? JSON.parse(ed.effetsPuissance) : ed.effetsPuissance; return o && typeof o === 'object' && !Array.isArray(o) ? o : {} } catch { return {} } })(),
                 methodeConsommation: ed.consumptionMethod ?? '',
                 dosageUtilise: ed.dosage ?? '',
                 dosageUnite: ed.dosageUnit ?? 'g',

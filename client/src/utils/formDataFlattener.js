@@ -79,6 +79,7 @@ export function flattenCommonFormData(data) {
         if (data.effets.intensity !== undefined) flat.intensiteEffetScore = data.effets.intensity
         if (data.effets.duration) flat.effectDuration = data.effets.duration
         if (data.effets.effects) flat.effetsChoisis = data.effets.effects
+        if (data.effets.effectsPower) flat.effetsPuissance = data.effets.effectsPower
         // Expérience
         if (data.effets.methodeConsommation) flat.consumptionMethod = data.effets.methodeConsommation
         if (data.effets.dosageUtilise) flat.dosage = data.effets.dosageUtilise

@@ -844,6 +844,7 @@ model FlowerReview {
   monteeScore         Float? // Montée (rapidité)/10
   intensiteEffetScore Float? // Intensité/10
   effetsChoisis       String? // JSON: max 8 (mentaux, physiques, thérapeutiques)
+  effetsPuissance     String? // JSON { idEffet: 1-10 } — puissance relative de chaque effet choisi
   effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
 
   // ===== PIPELINE CURING / MATURATION =====
@@ -980,6 +981,7 @@ model HashReview {
   monteeRapidite      Float? // Montée /10
   intensiteEffets     Float? // Intensité /10
   effetsChoisis       String? // JSON: max 8
+  effetsPuissance     String? // JSON { idEffet: 1-10 } — puissance relative de chaque effet choisi
   effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
   methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
   dosageUtilise       String? // Dosage estimé
@@ -1109,6 +1111,7 @@ model ConcentrateReview {
   monteeRapidite      Float? // Montée /10
   intensiteEffets     Float? // Intensité /10
   effetsChoisis       String? // JSON: max 8
+  effetsPuissance     String? // JSON { idEffet: 1-10 } — puissance relative de chaque effet choisi
   effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
   methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
   dosageUtilise       String? // Dosage estimé
@@ -1176,6 +1179,7 @@ model EdibleReview {
   monteeRapidite    Float? // Montée /10
   intensiteEffets   Float? // Intensité /10
   effetsChoisis     String? // JSON: max 8
+  effetsPuissance   String? // JSON { idEffet: 1-10 } — puissance relative de chaque effet choisi
   effetsFiltre      String? // "tous", "neutre", "positif", "negatif"
   dureeEffets       String? // "5-15min", "15-30min", etc.
   consumptionMethod String? // Méthode de consommation — même nom que FlowerReview

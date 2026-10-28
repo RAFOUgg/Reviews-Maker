@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
-import { validateReviewId, parsePagination } from '../utils/validation.js'
+import { validateReviewId, parsePagination, sanitizeEffectsPower } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
@@ -167,6 +167,11 @@ function validateEdibleReviewData(data, options = {}) {
     })
 
     // Effets choisis (max 8)
+    // Puissance relative de chaque effet (1-10), cf. sanitizeEffectsPower
+    if (data.effetsPuissance !== undefined) {
+        const power = sanitizeEffectsPower(data.effetsPuissance)
+        if (power !== undefined) cleaned.effetsPuissance = power
+    }
     if (data.effetsChoisis) {
         if (Array.isArray(data.effetsChoisis)) {
             cleaned.effetsChoisis = JSON.stringify(data.effetsChoisis.slice(0, 8))

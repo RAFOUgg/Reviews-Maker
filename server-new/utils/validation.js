@@ -269,3 +269,25 @@ export function parsePagination(page, limit, { defaultLimit = 20, maxLimit = 100
     const p = Math.max(parseInt(page, 10) || 1, 1)
     return { page: p, limit: l, skip: (p - 1) * l }
 }
+
+/**
+ * Puissance relative de chaque effet choisi (« effetsPuissance ») : { idEffet: 1..10 }.
+ * Accepte un objet ou sa forme JSON (les formulaires multipart envoient du texte). Clés limitées
+ * à des identifiants courts, au plus 8 (comme effetsChoisis), valeurs arrondies et bornées à 1-10.
+ * Renvoie la chaîne JSON à stocker, null pour effacer, ou undefined si l'entrée est inexploitable.
+ */
+export function sanitizeEffectsPower(raw) {
+    if (raw === null || raw === '') return null
+    let obj = raw
+    if (typeof raw === 'string') {
+        try { obj = JSON.parse(raw) } catch { return undefined }
+    }
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined
+    const out = {}
+    for (const [key, value] of Object.entries(obj).slice(0, 8)) {
+        if (!/^[\w-]{1,64}$/.test(key)) continue
+        const n = Math.round(Number(value))
+        if (Number.isFinite(n) && n >= 1) out[key] = Math.min(n, 10)
+    }
+    return JSON.stringify(out)
+}

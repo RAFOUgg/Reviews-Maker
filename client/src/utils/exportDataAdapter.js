@@ -16,6 +16,22 @@
  */
 import { asArray, safeParse, extractLabel } from './exportMakerHelpers';
 import { getFieldRegistry, normalizeProductType } from './fieldRegistry';
+import { getAllEffects } from '../data/effectsCategories';
+
+const EFFECT_NAMES = Object.fromEntries(getAllEffects().map((e) => [e.id, e.name || e.id]));
+
+// Puissance de chaque effet ({ id: 1-10 }) → liste lisible triée du plus fort au plus faible,
+// rendue par le chemin générique « list » des 5 templates (aucun type de champ nouveau à gérer).
+function effectsPowerList(raw, chosen) {
+    const power = safeParse(raw);
+    if (!power || typeof power !== 'object' || Array.isArray(power)) return undefined;
+    const keep = Array.isArray(chosen) && chosen.length ? new Set(chosen) : null;
+    const items = Object.entries(power)
+        .filter(([id, v]) => Number(v) > 0 && (!keep || keep.has(id)))
+        .sort((a, b) => Number(b[1]) - Number(a[1]))
+        .map(([id, v]) => `${EFFECT_NAMES[id] || id} · ${Number(v)}/10`);
+    return items.length ? items : undefined;
+}
 
 function pick(...values) {
     for (const v of values) {
@@ -137,6 +153,12 @@ function build(reviewDataRaw) {
     // Note globale — le backend calcule déjà une moyenne correcte dans computedOverall
     // (reviewFormatter.js) ; les templates lisent `rating`.
     setOrDelete(adapted, 'rating', pick(reviewData.computedOverall, reviewData.rating));
+
+    // Source dérivée du registre (cf. effectsPowerList) — calculée AVANT la projection.
+    if (reviewData.effetsPuissanceListe === undefined) {
+        const list = effectsPowerList(reviewData.effetsPuissance ?? reviewData.effectsPower, asArray(reviewData.effetsChoisis ?? reviewData.effects));
+        if (list) reviewData.effetsPuissanceListe = list;
+    }
 
     // Projeter chaque champ du registre vers sa clé canonique
     for (const f of fields) {
