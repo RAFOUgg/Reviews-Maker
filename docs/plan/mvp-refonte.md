@@ -21,7 +21,7 @@ Règle : 1 lot = 1 session ≤ 40k tokens = 1 branche `mvp/Lx-nom`, empilée sur
 7. Toute migration Prisma : générée par `npx prisma migrate diff --from-schema-datasource … --to-schema-datamodel … --script` dans `prisma/migrations/<horodatage>_<nom>/` (`migrate dev` refuse le mode non interactif), appliquée en local par `migrate deploy`. `deploy.sh` l'applique en prod.
 8. Fin de lot : résumé 5-10 lignes en mémoire (ou dans la description de branche pour Hermes) et mise à jour de la ligne `Statut :`.
 9. **Statuts** : `à faire` / `prêt` / **`prêt — deploy main final`** / `en cours` / `PR ouverte` / `fait`. Hermes ne prend que les lots `prêt…`, dans l'ordre de la section « Nuit », et jamais un lot portant un ⚠ non levé. Seul l'humain passe un lot à `prêt` ou `fait`.
-10. **`prêt — deploy main final`** (autorisé par l'humain le 2026-10-28) : Hermes enchaîne ces lots la nuit, chacun sur sa branche empilée, SANS merger. Seul le DERNIER lot de la nuit (L20) merge sur `main` et déploie — et uniquement si toutes les barrières (règle 3) sont vertes sur la branche finale. Une barrière rouge = arrêt, rien n'est mergé, rapport au matin.
+10. **`prêt — deploy main final`** (autorisé par l'humain le 2026-10-28) : chaque nuit, Hermes prend les lots `prêt — deploy main final` suivants dans l'ordre « Nuit », autant que le budget API le permet (référence : ~1 lot par nuit), chacun sur sa branche empilée, SANS merger. Puis il exécute **L20 en fin de nuit, à chaque fois**, sur la dernière branche produite : merge sur `main` + déploiement uniquement si toutes les barrières (règle 3) sont vertes. Une barrière rouge = rien n'est mergé ni déployé, rapport au matin. Un lot commencé mais non terminé avant la fin du budget n'est ni mergé ni déployé.
 11. Interdits pour Hermes en toutes circonstances : la base et le `.env` de prod en écriture, `force-push`, suppression de branche, `ssh` vers un autre hôte, `git add -A` (des sessions parallèles laissent des fichiers non commités dans l'arbre — ajouter les fichiers un par un).
 
 ---
@@ -32,20 +32,21 @@ Règle : 1 lot = 1 session ≤ 40k tokens = 1 branche `mvp/Lx-nom`, empilée sur
 |---|---|---|
 | L0, L0b (lint/tests + crashs) | fait | `main` |
 | L11 (sécurité, 10 correctifs) | fait, **déployé** | `main` + prod |
-| L1, L2 | PR ouverte (déjà sur `main`, non déployés) | `main` |
+| L1, L2 | fait, **déployés** (2026-10-28 01:32, migration `effets_puissance` appliquée) | `main` + prod |
 | L4 galerie + fix `optionalAuth` | PR ouverte | `mvp/L4-galerie` |
 | L16 code de lot + QR | PR ouverte | `mvp/L16-code-lot` (⊃ L4) |
 | L6/L7/L8 couleurs à peindre | PR ouverte | `mvp/L6-couleurs` (⊃ L16) |
 
 Branches empilées : `main` ⊂ `mvp/L4-galerie` ⊂ `mvp/L16-code-lot` ⊂ `mvp/L6-couleurs`. **Point de départ de la nuit : `mvp/L6-couleurs`.**
-Migrations en attente de déploiement : `20261028010000_effets_puissance` (déjà sur main), `20261028020000_review_share_code` (branche L16).
+Migration en attente de déploiement : `20261028020000_review_share_code` (branche L16).
 
 **Reste : 13 lots du plan d'origine + 5 nouveaux = 18 lots.** 6 sont bloqués par un ⚠ humain (L3, L10, L13, L15a, L15b, L17) ; 12 sont prêts pour la nuit.
 
 ---
 
 ## Nuit (ordre d'exécution Hermes)
-L21 → L22 → L23 → L24 → L12a → L19 → L18 → L5 → L9 → L14 → L12b → **L20 (merge + déploiement final)**
+L21 → L22 → L23 → L24 → L12a → L19 → L18 → L5 → L9 → L14 → L12b, **puis L20 en fin de CHAQUE nuit** (merge + déploiement de ce qui a été terminé).
+La première nuit, L20 intègre aussi les branches en attente (L4, L16, L6-L8) même si aucun lot n'a pu être fait.
 
 ### L21 — Sondes fiables (nouveau)
 Statut : prêt — deploy main final
@@ -116,12 +117,12 @@ Statut : prêt — deploy main final
 - Invitation/retrait de membres, rôles hiérarchiques, journal des actions des membres sur les ressources de l'entreprise (`AuditLog`, déjà utilisé par la Chaîne de production).
 - **Accepté si** : un membre à rôle limité se voit refuser une action réservée (testé serveur, NODE_ENV=test) ; l'action apparaît au journal.
 
-### L20 — Intégration + déploiement final (nouveau, toujours DERNIER)
+### L20 — Intégration + déploiement final (nouveau, en fin de CHAQUE nuit)
 Statut : prêt — deploy main final
 - Sur la dernière branche de la nuit : `lint:critical` = 0, `npm run build` vert, `node tools/export-audit/run-all.mjs` vert, serveur local démarré (`/api/health` 200) avec les migrations appliquées.
 - Si tout est vert : fast-forward de `main` sur cette branche, `git push origin main`, puis déploiement par `timeout 300 ssh vps-lafoncedalle "cd ~/Reviews-Maker && bash deploy.sh --vps 2>&1"` (ou `bash deploy.sh --vps` directement sur le VPS). Puis contrôle externe : `/api/health` 200, page d'accueil 200, `/api/admin/check-auth` anonyme → `isAdmin:false`, `/l/<code inconnu>` → 404 API.
 - Si une barrière est rouge : RIEN n'est mergé ni déployé ; rapport au matin avec la barrière fautive.
-- ⚠ Contient des lots encore « PR ouverte » (L1, L2, L4, L16, L6-L8) que l'humain a autorisés au déploiement final le 2026-10-28 sans les avoir relus un par un.
+- ⚠ La première exécution contient des lots encore « PR ouverte » (L4, L16, L6-L8) que l'humain a autorisés au déploiement final le 2026-10-28 sans les avoir relus un par un.
 - **Accepté si** : prod à jour, contrôles externes verts, rapport rédigé.
 
 ---
@@ -154,8 +155,8 @@ Statut : à faire ⚠ l'humain pose les clés (sandbox d'abord).
 
 - **L0/L0b** — `npm run lint:critical` ; 11 crashs d'exécution corrigés. fait.
 - **L11** — 2 IDOR de lecture, garde des bannis, pagination bornée, filtres d'upload, suppression de média par propriétaire, `/api/pipelines` démonté, XSS de l'export HTML de template, **`ADMIN_MODE` ouvrait l'admin aux anonymes en prod** (supprimé). fait, déployé.
-- **L1** — évolution ≥ 2 cases, légendes de bornes sur les jauges, puissance /10 par effet (migration `effets_puissance`). PR ouverte.
-- **L2** — format d'écran automatique, boutons et bandeau retirés. PR ouverte.
+- **L1** — évolution ≥ 2 cases, légendes de bornes sur les jauges, puissance /10 par effet (migration `effets_puissance`). Déployé.
+- **L2** — format d'écran automatique, boutons et bandeau retirés. Déployé.
 - **L4** — cartes de galerie (faits clés, pseudo → profil, like réel). PR ouverte.
 - **L16** — `Review.shareCode`, `/l/:code`, étiquette 85×55 mm, QR des templates → lien court. PR ouverte.
 - **L6/L7/L8** — `PaintableColorSilhouette` (bud, hash + violet/blanc, rosin jar + violet/rouge), format stocké inchangé. PR ouverte.
