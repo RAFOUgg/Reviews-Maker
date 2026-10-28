@@ -33,9 +33,10 @@ Règle : 1 lot = 1 session ≤ 40k tokens = 1 branche `mvp/Lx-nom`, empilée sur
 | L0, L0b (lint/tests + crashs) | fait | `main` |
 | L11 (sécurité, 10 correctifs) | fait, **déployé** | `main` + prod |
 | L1, L2 | fait, **déployés** (2026-10-28 01:32, migration `effets_puissance` appliquée) | `main` + prod |
-| L4 galerie + fix `optionalAuth` | PR ouverte | `mvp/L4-galerie` |
-| L16 code de lot + QR | PR ouverte | `mvp/L16-code-lot` (⊃ L4) |
-| L6/L7/L8 couleurs à peindre | PR ouverte | `mvp/L6-couleurs` (⊃ L16) |
+| L4 galerie + fix `optionalAuth` | fait, **déployé** (2026-10-28 22:07, main `86ef3b92`, migration `review_share_code` appliquée) | `main` + prod |
+| L16 code de lot + QR | fait, **déployé** (2026-10-28 22:07, main `86ef3b92`, migration `review_share_code` appliquée) | `main` + prod |
+| L6/L7/L8 couleurs à peindre | fait, **déployé** (2026-10-28 22:07, main `86ef3b92`, migration `review_share_code` appliquée) | `main` + prod |
+| L21 sondes fiables + correctif `seal` | fait, **déployé** (2026-10-28 22:07, main `86ef3b92`, migration `review_share_code` appliquée) | `main` + prod |
 
 Branches empilées : `main` ⊂ `mvp/L4-galerie` ⊂ `mvp/L16-code-lot` ⊂ `mvp/L6-couleurs`. **Point de départ de la nuit : `mvp/L6-couleurs`.**
 Migration en attente de déploiement : `20261028020000_review_share_code` (branche L16).
@@ -49,7 +50,7 @@ L21 → L22 → L23 → L24 → L12a → L19 → L18 → L5 → L9 → L14 → L
 La première nuit, L20 intègre aussi les branches en attente (L4, L16, L6-L8) même si aucun lot n'a pu être fait.
 
 ### L21 — Sondes fiables (nouveau)
-Statut : prêt — deploy main final — EN COURS sur `mvp/L21-nouvelles-sondes`, STOP levé (humain, 2026-10-28 soir). Le bug `seal` est corrigé hors L21 par l'humain : `/r/:id` réaffiche l'« empreinte actuelle » (`PublicRenderPage.jsx`), et le Studio imprimait une empreinte de `{id, updatedAt: null}` (le formulaire ne porte pas `updatedAt`) — `ExportMakerPanel.jsx` relit désormais `updatedAt` sur l'API. `seal` vert sur la pile isolée. Reste : relancer `run-all` complet (attendu 43/43), puis L21 est fait.
+Statut : fait, **déployé** (2026-10-28 22:07, main `86ef3b92`). Barrières vertes sur l'arbre exact déployé : `lint:critical` 0 erreur, build, `run-all` **43/43** (pile isolée). Inclut le correctif `seal` (`/r/:id` réaffiche l'empreinte ; le Studio relit `updatedAt`). Lot suivant : L22, sur une branche partant de `main`.
 - `pdf-check.mjs` et `format-check.mjs` sont PÉRIMÉES (datent du 2026-08-11 ; cherchent les boutons « A4 (Document) »/« Écran » déplacés le 2026-08-13 dans la modale d'export `ExportModal.jsx`/`RatioSelector.jsx`) → les réécrire sur l'UI actuelle.
 - `tools/export-audit/run-all.mjs` : lance toutes les sondes en série (une fixture chacune), résumé OK/KO par sonde, code de sortie ≠ 0 si un KO. C'est la barrière de L20.
 - **Accepté si** : `run-all` vert sur `mvp/L6-couleurs` ; toute sonde rouge est soit corrigée (sonde périmée) soit signalée (bug produit réel, alors STOP et rapport).
