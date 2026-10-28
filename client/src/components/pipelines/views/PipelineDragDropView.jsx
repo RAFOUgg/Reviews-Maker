@@ -3380,7 +3380,7 @@ const PipelineDragDropView = ({
                     selectedCells={cellContextMenu?.selectedCells || []}
                     cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
                     sidebarContent={sidebarContent}
-                    onOpenCurve={() => setCurveOpen(cellContextMenu?.selectedCells?.length > 1 ? [...cellContextMenu.selectedCells] : 'trame')}
+                    onOpenCurve={() => { if (cellContextMenu?.selectedCells?.length > 1) setCurveOpen([...cellContextMenu.selectedCells]); }}
                     onClose={() => setCellContextMenu(null)}
                     onDeleteAll={() => {
                         const targets = cellContextMenu?.selectedCells || [];

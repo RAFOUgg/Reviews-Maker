@@ -194,21 +194,25 @@ function CellContextMenu({
                         </button>
                     )}
 
-                    {/* ÉVOLUTION D'UNE DONNÉE — sur la SÉLECTION, ou sur la trame entière à défaut.
-                        Renseigner une grandeur qui évolue (température, humidité, CO₂…) demandait
-                        d'ouvrir chaque cellule : sur 90 jours, personne ne le fait, et les
-                        statistiques du rendu tracent alors des lignes plates sur deux points. */}
+                    {/* ÉVOLUTION D'UNE DONNÉE — uniquement sur une SÉLECTION d'au moins 2 cases : une
+                        évolution se définit entre un début et une fin. Sur une case seule il n'y a rien
+                        à faire évoluer, et l'ancien repli « toute la trame » écrasait en silence des
+                        cases que l'utilisateur n'avait pas choisies. */}
                     {onOpenCurve && (
                         <button
-                            onClick={() => { onOpenCurve(); onClose(); }}
-                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors text-white/80 hover:text-white"
+                            onClick={() => { if (!isBulk) return; onOpenCurve(); onClose(); }}
+                            disabled={!isBulk}
+                            title={isBulk ? undefined : 'Sélectionnez au moins 2 cases pour définir une évolution'}
+                            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 transition-colors ${isBulk ? 'hover:bg-white/5 text-white/80 hover:text-white' : 'text-white/30 cursor-not-allowed'}`}
                         >
-                            <TrendingUp className="w-4 h-4 text-violet-400" />
+                            <TrendingUp className={`w-4 h-4 ${isBulk ? 'text-violet-400' : 'text-white/30'}`} />
                             <span>Définir une évolution…</span>
-                            {isBulk && (
+                            {isBulk ? (
                                 <span className="ml-auto text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">
                                     {selectedCells.length}
                                 </span>
+                            ) : (
+                                <span className="ml-auto text-[11px] text-white/30">≥ 2 cases</span>
                             )}
                         </button>
                     )}
