@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import SingleReviewCard from '../../components/export/SingleReviewCard'
 import { resolveConfigForReview } from '../../store/exportMakerStore'
+import { useDocumentSeal } from '../../hooks/useDocumentSeal'
+import { getLotCode } from '../../utils/lotCode'
 
 /**
  * Lien HTML vivant partageable (Chantier B de la finalisation Export Maker) — contrairement à un
@@ -22,6 +24,8 @@ export default function PublicRenderPage() {
     // La config Export Maker enregistrée sur la review pilote le rendu écran exactement comme elle
     // pilote les templates de fichier (C10-3) : palette, police, et modules de contenu actifs.
     const config = useMemo(() => (review ? resolveConfigForReview(review, 'detailedCard') : null), [review])
+    // Appelé avant les retours anticipés (règle des hooks) ; renvoie null tant que la review manque.
+    const { shortHash: docHash } = useDocumentSeal(review)
 
     useEffect(() => {
         let active = true
@@ -80,6 +84,27 @@ export default function PublicRenderPage() {
                     canvasId="public-render-canvas"
                 />
             </div>
+            {/* Sceau vérifiable — la contrepartie à l'écran de l'empreinte imprimée sur le document.
+                Hors du template, exprès : il vivait dans la Vue Détaillée et a disparu avec elle
+                (b4ebdbaf), car aucun template écran ne le porte (Moderne Compact, défaut, n'a pas de
+                sceau). Ici il ne dépend plus du template choisi par l'auteur. Le QR du document vise
+                cette page : sans ce bloc, l'empreinte imprimée n'a rien à quoi se comparer
+                (`tools/export-audit/seal-check.mjs`). */}
+            {docHash && (
+                <div
+                    style={{
+                        width: '100%', maxWidth: 1400, marginTop: 16, paddingTop: 12,
+                        borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexWrap: 'wrap',
+                        alignItems: 'center', gap: '4px 24px', fontSize: 12, color: 'rgba(255,255,255,0.5)',
+                    }}
+                >
+                    <span style={{ fontFamily: 'monospace' }}>lot {getLotCode(review)}</span>
+                    <span style={{ fontFamily: 'monospace' }}>empreinte actuelle {docHash}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                        Comparez-la à celle imprimée sur votre document : si elles diffèrent, la fiche a changé depuis son édition.
+                    </span>
+                </div>
+            )}
             <Link
                 to={`/r/${id}/lineage`}
                 style={{

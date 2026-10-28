@@ -15,10 +15,14 @@ import { isTemplatePaginable } from '../../../store/exportMakerConstants';
  * Normalise les données d'une review pour s'assurer que tous les champs
  * sont accessibles de manière cohérente dans les templates
  */
-function normalizeReviewData(reviewData) {
+function normalizeReviewData(reviewData, serverUpdatedAt = null) {
     if (!reviewData) return null;
 
     let normalized = { ...reviewData };
+    // Le sceau imprimé hache `{ id, updatedAt }` (useDocumentSeal). Le formulaire ne porte pas
+    // `updatedAt`, et l'autosave le fait avancer côté serveur : seule la valeur relue sur l'API
+    // donne l'empreinte que `/r/:id` affichera pour cette même version.
+    if (serverUpdatedAt) normalized.updatedAt = serverUpdatedAt;
 
     // Parse extraData si c'est une chaîne JSON
     let parsedExtra = {};
@@ -245,7 +249,23 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
     // Mêmes données que celles poussées dans le store pour les templates de fichier — l'aperçu
     // écran ne doit pas lire une 2e normalisation qui divergerait.
-    const normalizedReview = useMemo(() => normalizeReviewData(reviewData), [reviewData]);
+    // `updatedAt` relu sur le serveur à l'ouverture (cf. normalizeReviewData) : sans lui, tout
+    // document exporté depuis le Studio imprimait une empreinte de `{ id, updatedAt: null }`, qui ne
+    // correspondait JAMAIS à celle de `/r/:id` (mesuré par `tools/export-audit/seal-check.mjs`).
+    const [serverUpdatedAt, setServerUpdatedAt] = useState(null);
+    const reviewIdForSeal = reviewData?.id ?? null;
+    useEffect(() => {
+        setServerUpdatedAt(null);
+        if (!reviewIdForSeal) return undefined;
+        let active = true;
+        fetch(`/api/reviews/${reviewIdForSeal}`, { credentials: 'include' })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => { if (active && data?.updatedAt) setServerUpdatedAt(data.updatedAt); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [reviewIdForSeal]);
+
+    const normalizedReview = useMemo(() => normalizeReviewData(reviewData, serverUpdatedAt), [reviewData, serverUpdatedAt]);
 
     const effectivePagesActive = isTemplatePaginable(config.template) && !paginationDisabled;
 
@@ -299,7 +319,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     useEffect(() => {
         if (reviewData) {
             // Utiliser la fonction de normalisation centralisée
-            const normalized = normalizeReviewData(reviewData);
+            const normalized = normalizeReviewData(reviewData, serverUpdatedAt);
 
             if (normalized) {
                 setReviewData(normalized);
@@ -325,7 +345,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                 }
             }
         }
-    }, [reviewData, setReviewData]);
+    }, [reviewData, serverUpdatedAt, setReviewData]);
 
     // Note: la pagination ne s'active plus automatiquement - l'utilisateur choisit via le toggle
 
