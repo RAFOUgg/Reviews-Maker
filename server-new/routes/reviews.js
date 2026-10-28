@@ -15,6 +15,7 @@ import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireR
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
 import { finalizeUploads } from '../middleware/uploads.js'
 import { generateShareCode, SHARE_CODE_PATTERN } from '../utils/shareCode.js'
+import { likeLimiter, shareCodeLimiter } from '../middleware/rateLimit.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -243,7 +244,7 @@ router.get('/by-code/:code', optionalAuth, asyncHandler(async (req, res) => {
 
 // POST /api/reviews/:id/share-code — crée (ou renvoie) le code de lot d'une review PUBLIQUE.
 // Réservé à qui peut modifier la review. Idempotent : un code déjà imprimé ne change jamais.
-router.post('/:id/share-code', requireAuth, asyncHandler(async (req, res) => {
+router.post('/:id/share-code', requireAuth, shareCodeLimiter, asyncHandler(async (req, res) => {
     if (!validateReviewId(req.params.id)) throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
     const review = await prisma.review.findUnique({ where: { id: req.params.id } })
     if (!review) throw Errors.REVIEW_NOT_FOUND()
@@ -848,7 +849,7 @@ router.patch('/:id/preview', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 // POST /api/reviews/:id/like - Ajouter un like à une review
-router.post('/:id/like', requireAuth, asyncHandler(async (req, res) => {
+router.post('/:id/like', requireAuth, likeLimiter, asyncHandler(async (req, res) => {
     const { id } = req.params
     const userId = req.user.id
 
@@ -915,7 +916,7 @@ router.post('/:id/like', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 // POST /api/reviews/:id/dislike - Ajouter un dislike à une review
-router.post('/:id/dislike', requireAuth, asyncHandler(async (req, res) => {
+router.post('/:id/dislike', requireAuth, likeLimiter, asyncHandler(async (req, res) => {
     const { id } = req.params
     const userId = req.user.id
 

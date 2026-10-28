@@ -19,6 +19,7 @@ import {
 } from '../services/account.js';
 import { isValidSiretFormat, checkSiretExists, computeVatNumber } from '../services/sirene.js';
 import { requireAuth } from '../middleware/auth.js';
+import { uploadLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -266,7 +267,7 @@ router.post('/verify-siret', requireAuth, asyncHandler(async (req, res) => {
  * POST /api/account/verification-document
  * Upload du document justificatif pour la vérification producteur
  */
-router.post('/verification-document', requireAuth, verificationDocUpload.single('document'), asyncHandler(async (req, res) => {
+router.post('/verification-document', requireAuth, uploadLimiter, verificationDocUpload.single('document'), asyncHandler(async (req, res) => {
     if (!req.file) {
         return res.status(400).json({
             error: 'no_file',

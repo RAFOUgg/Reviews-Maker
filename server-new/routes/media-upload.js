@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url'
 import { requireAuth } from '../middleware/auth.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, isVideoExtension } from '../utils/uploadFormats.js'
 import { finalizeUploads } from '../middleware/uploads.js'
+import { uploadLimiter } from '../middleware/rateLimit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const mediaDir = path.resolve(__dirname, '../../db/pipeline_media')
@@ -64,7 +65,7 @@ function handleUploadError(err, req, res, next) {
 
 const router = express.Router()
 
-router.post('/', requireAuth, (req, res, next) => {
+router.post('/', requireAuth, uploadLimiter, (req, res, next) => {
     upload.single('file')(req, res, (err) => handleUploadError(err, req, res, next))
 }, finalizeUploads, (req, res) => {
     if (!req.file) {

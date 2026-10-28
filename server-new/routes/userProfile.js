@@ -10,6 +10,7 @@ import fs from 'fs'
 import { prisma } from '../server.js'
 import { fileURLToPath } from 'url'
 import { requireAuth } from '../middleware/auth.js'
+import { uploadLimiter } from '../middleware/rateLimit.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const router = express.Router()
@@ -147,7 +148,7 @@ router.put('/profile', requireAuth, async (req, res) => {
 
 // ==================== UPLOAD AVATAR ====================
 // POST /api/user/avatar
-router.post('/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+router.post('/avatar', requireAuth, uploadLimiter, upload.single('avatar'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
@@ -187,7 +188,7 @@ router.post('/avatar', requireAuth, upload.single('avatar'), async (req, res) =>
 
 // ==================== UPLOAD BANNER ====================
 // POST /api/user/banner
-router.post('/banner', requireAuth, upload.single('banner'), async (req, res) => {
+router.post('/banner', requireAuth, uploadLimiter, upload.single('banner'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });

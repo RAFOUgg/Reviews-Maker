@@ -11,6 +11,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../utils/errorHandler.js';
 import { parsePagination } from '../utils/validation.js';
+import { commentLimiter, likeLimiter } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -251,7 +252,7 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
  * POST /api/gallery/:id/like
  * Like ou dislike une review publique
  */
-router.post('/:id/like', asyncHandler(async (req, res) => {
+router.post('/:id/like', likeLimiter, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -349,7 +350,7 @@ router.post('/:id/like', asyncHandler(async (req, res) => {
  * POST /api/gallery/:id/comment
  * Ajouter un commentaire sur une review publique
  */
-router.post('/:id/comment', asyncHandler(async (req, res) => {
+router.post('/:id/comment', commentLimiter, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -412,7 +413,7 @@ router.post('/:id/comment', asyncHandler(async (req, res) => {
  * PUT /api/gallery/comments/:commentId
  * Modifier son propre commentaire
  */
-router.put('/comments/:commentId', asyncHandler(async (req, res) => {
+router.put('/comments/:commentId', commentLimiter, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -469,7 +470,7 @@ router.put('/comments/:commentId', asyncHandler(async (req, res) => {
  * DELETE /api/gallery/comments/:commentId
  * Supprimer son propre commentaire
  */
-router.delete('/comments/:commentId', asyncHandler(async (req, res) => {
+router.delete('/comments/:commentId', commentLimiter, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',

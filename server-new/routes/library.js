@@ -10,6 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
 import { canAccessFeature } from '../middleware/permissions.js';
 import { requireAuth } from '../middleware/auth.js';
+import { uploadLimiter } from '../middleware/rateLimit.js';
 import { resolveAccess, companyScopeFilter, canModifyResource, canModifyFor, canReadFor, owningCompanyId, requirePublishingAllowed } from '../services/access.js';
 import multer from 'multer'
 import path from 'path'
@@ -301,7 +302,7 @@ router.get('/watermarks/default', requireAuth, asyncHandler(async (req, res) => 
  * Upload une image de filigrane (logo) — route manquante, le frontend l'appelait déjà
  * (WatermarksTab.jsx) mais sans endpoint backend correspondant, donc l'upload échouait toujours
  */
-router.post('/watermarks/upload', requireAuth, uploadExport.single('watermark'), asyncHandler(async (req, res) => {
+router.post('/watermarks/upload', requireAuth, uploadLimiter, uploadExport.single('watermark'), asyncHandler(async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'missing_file', message: 'Fichier watermark requis (champ: watermark)' })
     }
@@ -569,7 +570,7 @@ router.put('/data/:id', requireAuth, asyncHandler(async (req, res) => {
  */
 // requirePublishingAllowed : même garde que la création/visibilité de review — sans ça, publier un
 // export directement via cette route contournait le gate SIRET/KYC pour un compte pro non vérifié.
-router.post('/exports', requireAuth, uploadExport.single('file'), requirePublishingAllowed, asyncHandler(async (req, res) => {
+router.post('/exports', requireAuth, uploadLimiter, uploadExport.single('file'), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const { reviewId, name, description, templateName, format, isPublic: isPublicRaw, tags } = req.body
     const isPublic = isPublicRaw === 'true' || isPublicRaw === true || isPublicRaw === '1'
 

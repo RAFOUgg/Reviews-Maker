@@ -10,6 +10,7 @@ import fs from 'fs/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { requireAuth } from '../middleware/auth.js'
+import { uploadLimiter } from '../middleware/rateLimit.js'
 import { prisma } from '../server.js'
 
 const router = express.Router()
@@ -69,7 +70,7 @@ const upload = multer({
  * POST /api/kyc/upload
  * Upload un document d'identité (Producer ou Influencer uniquement)
  */
-router.post('/upload', requireAuth, upload.single('document'), async (req, res) => {
+router.post('/upload', requireAuth, uploadLimiter, upload.single('document'), async (req, res) => {
     try {
         const userId = req.user.id
         const { documentType } = req.body // 'id_card', 'passport', 'driving_license', 'business_license'
