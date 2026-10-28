@@ -19,6 +19,12 @@ const LiquidSlider = ({
     gradient = false,
     color = 'purple',
     size = 'sm', // 'sm' | 'md' | 'lg' — cf. .liquid-slider-track[data-size] dans apple-liquid-glass.css
+    // Sens des bornes, affiché sous la jauge (« 1 · Très mou ··· 10 · Béton »). Sans lui, une note
+    // chiffrée se lit comme une quantité et on ne sait pas de quel côté est « plus ». Soit
+    // minLabel/maxLabel, soit scaleLabels (table valeur → libellé, bornes = 1 et max).
+    minLabel,
+    maxLabel,
+    scaleLabels,
     className = '',
     ...props
 }) => {
@@ -36,6 +42,10 @@ const LiquidSlider = ({
     const trackRef = useRef(null)
 
     const percentage = ((value - min) / (max - min)) * 100;
+    // 0 = « non évalué » sur les jauges notées : la première vraie graduation est 1.
+    const lowBound = min === 0 && (scaleLabels?.[1] || minLabel) ? 1 : min;
+    const lowText = minLabel ?? scaleLabels?.[lowBound];
+    const highText = maxLabel ?? scaleLabels?.[max];
 
     // Doit rester synchronisé avec l'inset `left` de .liquid-slider-fill par taille dans
     // apple-liquid-glass.css (sm=2px, md=4px, lg=5px). Fill et thumb doivent être calculés
@@ -137,6 +147,13 @@ const LiquidSlider = ({
                     </motion.div>
                 </motion.div>
             </div>
+
+            {(lowText || highText) && (
+                <div className="flex justify-between gap-2 mt-1 text-[11px] leading-tight text-white/45" data-slider-bounds>
+                    <span>{lowBound} · {lowText}</span>
+                    <span className="text-right">{max} · {highText}</span>
+                </div>
+            )}
 
             {/* Scale indicators */}
             <div className="flex justify-between mt-0.5 text-[10px] text-[var(--text-tertiary)]">

@@ -169,6 +169,7 @@ export default function TextureSection({ productType, data: directData, onChange
                         step={1}
                         color="pink"
                         onChange={(val) => setHardness(val)}
+                        scaleLabels={TEXTURE_LABELS.hardness}
                     />
                     <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-white/40">{TEXTURE_LABELS.hardness[hardness] || 'Non évalué'}</p>
@@ -185,6 +186,7 @@ export default function TextureSection({ productType, data: directData, onChange
                         step={1}
                         color="pink"
                         onChange={(val) => setDensity(val)}
+                        scaleLabels={TEXTURE_LABELS.density}
                     />
                     <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-white/40">{TEXTURE_LABELS.density[density] || 'Non évalué'}</p>
@@ -201,6 +203,7 @@ export default function TextureSection({ productType, data: directData, onChange
                         step={1}
                         color="pink"
                         onChange={(val) => setStickiness(val)}
+                        scaleLabels={TEXTURE_LABELS.stickiness}
                     />
                     <div className="flex items-center justify-between mt-2">
                         <p className="text-xs text-white/40">{TEXTURE_LABELS.stickiness[stickiness] || 'Non évalué'}</p>
@@ -219,6 +222,7 @@ export default function TextureSection({ productType, data: directData, onChange
                             step={1}
                             color="pink"
                             onChange={(val) => setElasticity(val)}
+                        scaleLabels={TEXTURE_LABELS.elasticity}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.elasticity[elasticity] || 'Non évalué'}</p>
                     </div>
@@ -235,6 +239,7 @@ export default function TextureSection({ productType, data: directData, onChange
                             step={1}
                             color="pink"
                             onChange={(val) => setMalleability(val)}
+                        scaleLabels={TEXTURE_LABELS.malleability}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.malleability[malleability] || 'Non évalué'}</p>
                     </div>
@@ -251,6 +256,7 @@ export default function TextureSection({ productType, data: directData, onChange
                             step={1}
                             color="pink"
                             onChange={(val) => setFriability(val)}
+                        scaleLabels={TEXTURE_LABELS.friability}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.friability[friability] || 'Non évalué'}</p>
                     </div>
@@ -267,6 +273,7 @@ export default function TextureSection({ productType, data: directData, onChange
                             step={1}
                             color="pink"
                             onChange={(val) => setViscosity(val)}
+                        scaleLabels={TEXTURE_LABELS.viscosity}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.viscosity[viscosity] || 'Non évalué'}</p>
                     </div>
@@ -291,6 +298,7 @@ export default function TextureSection({ productType, data: directData, onChange
                                 step={1}
                                 color="amber"
                                 onChange={(val) => setMelting(val)}
+                        scaleLabels={TEXTURE_LABELS.melting}
                             />
                             <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.melting[melting]}</p>
                         </div>
@@ -304,6 +312,7 @@ export default function TextureSection({ productType, data: directData, onChange
                                 step={1}
                                 color="green"
                                 onChange={(val) => setResidue(val)}
+                        scaleLabels={TEXTURE_LABELS.residue}
                             />
                             <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.residue[residue]}</p>
                         </div>

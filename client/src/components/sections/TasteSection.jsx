@@ -83,6 +83,8 @@ export default function TasteSection({ productType, data: directData, onChange, 
                         step={1}
                         color="orange"
                         onChange={(val) => setIntensity(val)}
+                        minLabel={TASTE_INTENSITY_LEVELS[0]?.label}
+                        maxLabel={TASTE_INTENSITY_LEVELS[TASTE_INTENSITY_LEVELS.length - 1]?.label}
                     />
                     <p className="text-xs text-white/40 mt-2">{intensity > 0 ? TASTE_INTENSITY_LEVELS[intensity - 1]?.label : 'Non évalué'}</p>
                 </div>
@@ -96,6 +98,8 @@ export default function TasteSection({ productType, data: directData, onChange, 
                         step={1}
                         color="orange"
                         onChange={(val) => setAggressiveness(val)}
+                        minLabel={(isEdible ? EDIBLE_AFTERTASTE_LEVELS : AGGRESSIVENESS_LEVELS)[0]?.label}
+                        maxLabel={(isEdible ? EDIBLE_AFTERTASTE_LEVELS : AGGRESSIVENESS_LEVELS).at(-1)?.label}
                     />
                     <p className="text-xs text-white/40 mt-2">
                         {aggressiveness > 0
