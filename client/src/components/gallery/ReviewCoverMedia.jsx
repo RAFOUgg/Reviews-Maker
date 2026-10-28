@@ -64,7 +64,9 @@ function formatDate(value) {
  * ils sont chargés paresseusement au premier survol via l'agrégateur déjà utilisé par le sélecteur
  * de médias du canvas Chaîne de production, jamais réimplémenté ici.
  */
-export default function ReviewCoverMedia({ review }) {
+// `caption={false}` : la carte appelante pose son propre bandeau (galerie publique) — deux
+// bandeaux superposés se chevauchaient.
+export default function ReviewCoverMedia({ review, caption = true }) {
     const containerRef = useRef(null);
     const reducedMotion = usePrefersReducedMotion();
     const onScreen = useIsOnScreen(containerRef);
@@ -219,7 +221,7 @@ export default function ReviewCoverMedia({ review }) {
             )}
 
             {/* Bandeau d'identification permanent — la galerie doit rester lisible sans survol. */}
-            <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none">
+            {caption && <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-purple-300/90">
@@ -237,7 +239,7 @@ export default function ReviewCoverMedia({ review }) {
                         </div>
                     )}
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }

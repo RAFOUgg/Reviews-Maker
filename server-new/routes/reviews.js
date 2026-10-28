@@ -80,8 +80,11 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
             // formatReview() ne peut pas appliquer son repli et la galerie publique n'a AUCUNE
             // photo de couverture pour ces 3 types. Uniquement la colonne `photos` : le reste de
             // la sous-table (trames de pipeline en JSON) alourdirait la liste pour rien.
-            hashData: { select: { photos: true } },
-            concentrateData: { select: { photos: true } },
+            // + les quelques champs que la carte de galerie affiche (cannabinoïde dominant, maillage,
+            // producteur, variété) — jamais les trames de pipeline, trop lourdes pour une liste.
+            flowerData: { select: { farm: true, variety: true, thcPercent: true, cbdPercent: true, cbgPercent: true } },
+            hashData: { select: { photos: true, hashmaker: true, tailleMailles: true, thcPercent: true, cbdPercent: true, cbgPercent: true } },
+            concentrateData: { select: { photos: true, hashmaker: true, thcPercent: true, cbdPercent: true, cbgPercent: true } },
             edibleData: { select: { photos: true } },
             likes: true // Inclure tous les likes pour calculer les stats
         },

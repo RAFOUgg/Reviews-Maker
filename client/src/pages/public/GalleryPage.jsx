@@ -13,6 +13,42 @@ import SingleReviewCard from '../../components/export/SingleReviewCard';
 import { resolveConfigForReview } from '../../store/exportMakerStore';
 import ReviewCoverMedia from '../../components/gallery/ReviewCoverMedia';
 import { extractReviewCoverMedia } from '../../utils/reviewFilesAggregator';
+import { useProfileModalStore } from '../../store/useProfileModalStore';
+
+// Libellé de type : `review.type` n'a pas de casse ni de langue uniforme entre les 4 types
+// (« Fleurs », « hash », « concentrate », « edible »…).
+function typeLabel(type) {
+  const t = String(type || '').toLowerCase();
+  if (t.startsWith('fleur') || t.startsWith('flower')) return 'Fleur';
+  if (t.startsWith('hash')) return 'Hash';
+  if (t.startsWith('concentr')) return 'Concentré';
+  if (t.startsWith('edible') || t.startsWith('comestible')) return 'Comestible';
+  return type || '';
+}
+
+// Cannabinoïde dominant (le plus élevé des taux renseignés) — « en général THC ou CBD ».
+function dominantCannabinoid(r) {
+  const candidates = [['THC', r.thcPercent], ['CBD', r.cbdPercent], ['CBG', r.cbgPercent]]
+    .map(([name, v]) => [name, Number(v)])
+    .filter(([, v]) => Number.isFinite(v) && v > 0);
+  if (!candidates.length) return null;
+  const [name, v] = candidates.sort((a, b) => b[1] - a[1])[0];
+  return `${name} ${Math.round(v * 10) / 10} %`;
+}
+
+// Faits clés affichés sur la carte, selon le type : ce qui distingue un produit d'un autre au
+// premier coup d'œil, au lieu d'une simple photo muette.
+function cardFacts(r) {
+  const t = String(r.type || '').toLowerCase();
+  const thc = dominantCannabinoid(r);
+  if (t.startsWith('fleur')) {
+    return [r.farm, r.variety || r.cultivar, thc].filter(Boolean);
+  }
+  if (t.startsWith('hash') || t.startsWith('concentr')) {
+    return [thc, r.tailleMailles && `Maillage ${r.tailleMailles}`, r.farm || r.hashmaker].filter(Boolean);
+  }
+  return [thc].filter(Boolean);
+}
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -90,9 +126,28 @@ export default function GalleryPage() {
     navigate(`/review/${reviewId}`);
   };
 
-  const handleLike = async (reviewId, liked) => {
-    // TODO: Implement like functionality
-    console.log('Like review:', reviewId, liked);
+  const openProfile = useProfileModalStore((s) => s.openProfile);
+
+  // Like en bascule (le serveur ajoute, retire ou convertit un dislike). Mise à jour immédiate,
+  // annulée si la requête échoue (ex. visiteur non connecté → 401).
+  const handleLike = async (reviewId) => {
+    const before = reviews;
+    setReviews((list) => list.map((r) => {
+      if (r.id !== reviewId) return r;
+      const liked = r.userLikeState === 'like';
+      return {
+        ...r,
+        userLikeState: liked ? null : 'like',
+        likesCount: Math.max(0, (r.likesCount || 0) + (liked ? -1 : 1)),
+        dislikesCount: r.userLikeState === 'dislike' ? Math.max(0, (r.dislikesCount || 0) - 1) : r.dislikesCount,
+      };
+    }));
+    try {
+      await reviewsService.like(reviewId);
+    } catch (error) {
+      setReviews(before);
+      if (error?.status === 401 || /401|auth/i.test(error?.message || '')) navigate('/login');
+    }
   };
 
   useEffect(() => {
@@ -205,13 +260,51 @@ export default function GalleryPage() {
                     photo retombe sur sa fiche Export Maker, qui reste une vignette valable — mieux
                     qu'une carte vide. */}
                 {extractReviewCoverMedia(review).length > 0 ? (
-                  <ReviewCoverMedia review={review} />
+                  <ReviewCoverMedia review={review} caption={false} />
                 ) : (
                   <ExportMakerCardRenderer
                     reviewData={review}
                     exportMakerConfig={review.exportMakerConfig}
                   />
                 )}
+                <div className="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-black/85 via-black/55 to-transparent" data-gallery-card-info>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/55">{typeLabel(review.type)}</span>
+                      <div className="text-white font-bold text-base leading-tight truncate">{review.holderName || review.name}</div>
+                    </div>
+                    {Number.isFinite(Number(review.computedOverall ?? review.note)) && Number(review.computedOverall ?? review.note) > 0 && (
+                      <span className="flex-shrink-0 px-2 py-0.5 rounded-md text-xs font-bold text-white bg-white/10 border border-white/15">★ {Number(review.computedOverall ?? review.note).toFixed(1)}</span>
+                    )}
+                  </div>
+                  {cardFacts(review).length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {cardFacts(review).map((fact) => (
+                        <span key={fact} className="px-2 py-0.5 rounded-md text-[11px] font-medium text-white/90 bg-white/10 border border-white/15 backdrop-blur-sm">{fact}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); const id = review.authorId || review.author?.id; if (id) openProfile(id); }}
+                      className="min-w-0 truncate text-sm text-white/75 hover:text-white underline-offset-2 hover:underline"
+                      data-gallery-author
+                    >
+                      @{review.ownerName || review.author?.username || 'Anonyme'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleLike(review.id); }}
+                      aria-pressed={review.userLikeState === 'like'}
+                      className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-sm border transition-colors ${review.userLikeState === 'like' ? 'bg-violet-600 border-violet-500 text-white' : 'bg-black/40 border-white/20 text-white/80 hover:text-white'}`}
+                      data-gallery-like
+                    >
+                      <span aria-hidden>♥</span>
+                      <span>{review.likesCount || 0}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
