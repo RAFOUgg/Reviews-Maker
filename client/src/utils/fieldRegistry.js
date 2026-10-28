@@ -312,6 +312,8 @@ export function getFieldLabel(key) {
 const PROTECTED_ROOT_KEYS = new Set([
     // Puissance des effets : rendue via la liste dérivée « effectsPower », jamais en brut.
     'effetsPuissance', 'effectsPower', 'effetsPuissanceListe',
+    // Code de lot : imprimé dans le QR/le pied de fiche, pas une donnée de review.
+    'shareCode',
     'id', 'reviewId', 'authorId', 'createdAt', 'updatedAt', 'isPublic', 'producerProfileId',
     'type', 'holderName', 'review', 'flowerData', 'hashData', 'concentrateData', 'edibleData',
     'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'exportMakerConfig',

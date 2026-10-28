@@ -180,6 +180,26 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     const [exportStatus, setExportStatus] = useState(null);
     const [exportProgress, setExportProgress] = useState(0);
     const [linkCopied, setLinkCopied] = useState(false);
+    // Code de lot stocké (L16) : créé à la demande, puis repris par le QR et l'étiquette.
+    const [lotShareCode, setLotShareCode] = useState(reviewData?.shareCode || null);
+    const [labelError, setLabelError] = useState(null);
+    const lotReview = { ...reviewData, shareCode: lotShareCode || reviewData?.shareCode };
+    const openLotLabel = async () => {
+        setLabelError(null);
+        try {
+            let code = lotShareCode;
+            if (!code) {
+                const res = await fetch(`/api/reviews/${reviewData.id}/share-code`, { method: 'POST', credentials: 'include' });
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(body.message || 'Étiquette indisponible');
+                code = body.shareCode;
+                setLotShareCode(code);
+            }
+            window.open(`/l/${code}/etiquette`, '_blank', 'noopener');
+        } catch (e) {
+            setLabelError(e.message);
+        }
+    };
     // Export "évolutif" (Chantier C) — cf. utils/TimelapseExporter.js, généralisé depuis
     // CuringGIFExporter.js pour fonctionner sur n'importe quel pipeline (pas seulement curing).
     const availableTimelapses = useMemo(() => getAvailableTimelapsePipelines(reviewData), [reviewData]);
@@ -851,19 +871,19 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                             </p>
                                             <div className="flex items-center gap-3">
                                                 <div className="bg-white p-2 rounded-lg flex-shrink-0">
-                                                    <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={56} level="M" />
+                                                    <QRCodeSVG value={getLotCodeUrl(lotReview)} size={56} level="M" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <input
                                                         readOnly
-                                                        value={getLotCodeUrl(reviewData.id)}
+                                                        value={getLotCodeUrl(lotReview)}
                                                         onFocus={(e) => e.target.select()}
                                                         className="w-full px-2 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                                                     />
                                                     <button
                                                         onClick={async () => {
                                                             try {
-                                                                await navigator.clipboard.writeText(getLotCodeUrl(reviewData.id));
+                                                                await navigator.clipboard.writeText(getLotCodeUrl(lotReview));
                                                                 setLinkCopied(true);
                                                                 setTimeout(() => setLinkCopied(false), 2000);
                                                             } catch { /* clipboard indisponible, l'utilisateur peut copier le champ à la main */ }
@@ -873,6 +893,14 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                                         {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
                                                         {linkCopied ? 'Copié !' : 'Copier le lien'}
                                                     </button>
+                                                    <button
+                                                        onClick={openLotLabel}
+                                                        className="mt-2 ml-4 inline-flex items-center gap-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700"
+                                                        data-lot-label-button
+                                                    >
+                                                        🏷️ Étiquette de lot{lotShareCode ? ` (${lotShareCode})` : ''}
+                                                    </button>
+                                                    {labelError && <p className="mt-1 text-xs text-red-500">{labelError}</p>}
                                                 </div>
                                             </div>
                                         </>

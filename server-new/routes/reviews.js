@@ -14,6 +14,7 @@ import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireReviewWriteOrThrow, resolveAccess, requirePublishingAllowed } from '../services/access.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
 import { finalizeUploads } from '../middleware/uploads.js'
+import { generateShareCode, SHARE_CODE_PATTERN } from '../utils/shareCode.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -226,6 +227,42 @@ async function resolveReviewForRead(id, req) {
 }
 
 // GET /api/reviews/:id - Récupérer une review spécifique
+// GET /api/reviews/by-code/:code — code de lot (étiquette QR, lien court /l/:code) → id de review.
+// Mêmes droits que la lecture par id (resolveReviewForRead) : un code ne contourne JAMAIS la
+// visibilité — une review repassée en privé après impression du QR renvoie 403, pas sa fiche.
+router.get('/by-code/:code', optionalAuth, asyncHandler(async (req, res) => {
+    const code = String(req.params.code || '').toUpperCase()
+    if (!SHARE_CODE_PATTERN.test(code)) return res.status(404).json({ error: 'not_found' })
+    const found = await prisma.review.findUnique({ where: { shareCode: code }, select: { id: true } })
+    if (!found) return res.status(404).json({ error: 'not_found' })
+    const result = await resolveReviewForRead(found.id, req)
+    if (result.error === 'forbidden') throw Errors.FORBIDDEN()
+    if (result.error) return res.status(404).json({ error: 'not_found' })
+    res.json({ id: found.id, shareCode: code })
+}))
+
+// POST /api/reviews/:id/share-code — crée (ou renvoie) le code de lot d'une review PUBLIQUE.
+// Réservé à qui peut modifier la review. Idempotent : un code déjà imprimé ne change jamais.
+router.post('/:id/share-code', requireAuth, asyncHandler(async (req, res) => {
+    if (!validateReviewId(req.params.id)) throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    const review = await prisma.review.findUnique({ where: { id: req.params.id } })
+    if (!review) throw Errors.REVIEW_NOT_FOUND()
+    await requireReviewWriteOrThrow(req, review)
+    if (!review.isPublic) {
+        return res.status(409).json({ error: 'not_public', message: 'Publiez la review avant de générer son étiquette : un QR doit mener à une fiche lisible par tous.' })
+    }
+    if (review.shareCode) return res.json({ shareCode: review.shareCode, path: `/l/${review.shareCode}` })
+    for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+            const updated = await prisma.review.update({ where: { id: review.id }, data: { shareCode: generateShareCode() } })
+            return res.status(201).json({ shareCode: updated.shareCode, path: `/l/${updated.shareCode}` })
+        } catch (err) {
+            if (err?.code !== 'P2002') throw err // collision d'unicité : on retire un code
+        }
+    }
+    throw new Error('share code generation failed')
+}))
+
 router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     console.log(`🔍 GET /api/reviews/${req.params.id}`)
     console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)

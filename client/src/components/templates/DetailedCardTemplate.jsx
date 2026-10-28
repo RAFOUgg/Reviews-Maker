@@ -209,7 +209,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
     const producerName = reviewData.farm || reviewData.hashmaker || reviewData.breeder || '';
     const authorName = reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme';
-    const lotCode = reviewData.id ? getLotCode(reviewData.id) : null;
+    const lotCode = reviewData.id ? getLotCode(reviewData) : null;
 
     const docDate = formatDate(reviewData.date || reviewData.createdAt);
 
@@ -1015,7 +1015,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 }}>
                     {reviewData.id && (
                         <div style={{ background: '#fff', padding: 3, borderRadius: 4, lineHeight: 0, flexShrink: 0 }}>
-                            <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={36} level="M" />
+                            <QRCodeSVG value={getLotCodeUrl(reviewData)} size={36} level="M" />
                         </div>
                     )}
                     {/* Sceau du document : lot, date d'émission, empreinte. Sans la date et

@@ -288,7 +288,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 {reviewData.id && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <div style={{ background: '#fff', padding: 4, borderRadius: 6, lineHeight: 0 }}>
-                            <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={56} level="M" />
+                            <QRCodeSVG value={getLotCodeUrl(reviewData)} size={56} level="M" />
                         </div>
                         <div style={{ fontSize: `${fontSize.small}px` }}>
                             <div style={{ fontFamily: 'monospace', fontWeight: 700 }}>{getLotCode(reviewData.id)}</div>

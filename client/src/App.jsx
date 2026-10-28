@@ -25,6 +25,8 @@ import { PrivateRoute } from './components/PrivateRoute'
 // Lazy-loaded pages (code splitting)
 const ReviewDetailPage = lazy(() => import('./pages/public/ReviewDetailPage'))
 const PublicRenderPage = lazy(() => import('./pages/public/PublicRenderPage'))
+const LotCodePage = lazy(() => import('./pages/public/LotCodePage'))
+const LotLabelPage = lazy(() => import('./pages/public/LotLabelPage'))
 const ReviewLineagePage = lazy(() => import('./pages/public/ReviewLineagePage'))
 const ProductionChainSharedPage = lazy(() => import('./pages/public/ProductionChainSharedPage'))
 const CreateReviewPage = lazy(() => import('./pages/review/CreateReviewPage'))
@@ -199,6 +201,9 @@ function App() {
                                     chrome, hors Layout : re-rend TemplateRenderer avec les données
                                     actuelles de la review à chaque visite, rien n'est figé. */}
                                 <Route path="/r/:id" element={<PublicRenderPage />} />
+                                {/* Code de lot (étiquette QR, L16) : /l/:code → /r/:id, et l'étiquette imprimable. */}
+                                <Route path="/l/:code" element={<LotCodePage />} />
+                                <Route path="/l/:code/etiquette" element={<LotLabelPage />} />
                                 {/* Traçabilité multi-review (chaîne sourceLineage ascendante) — même
                                     motif hors Layout que /r/:id, cf. ReviewLineagePage.jsx. */}
                                 <Route path="/r/:id/lineage" element={<ReviewLineagePage />} />

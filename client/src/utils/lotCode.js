@@ -19,7 +19,12 @@ const PREFIX = 'TRP';
 
 // Retire les tirets de l'UUID puis prend les 8 premiers caractères — suffisant pour l'usage
 // "référence humaine courte", pas un identifiant cryptographique (l'id complet reste la clé réelle).
-export function getLotCode(reviewId) {
+// Accepte l'id OU la review : si la review porte un vrai code de lot stocké (`shareCode`, créé
+// à la demande via POST /api/reviews/:id/share-code — L16, 2026-10-28), c'est lui qui est affiché
+// et imprimé. Sinon, repli sur le code dérivé historique (aucune fiche existante ne change).
+export function getLotCode(reviewOrId) {
+    if (reviewOrId && typeof reviewOrId === 'object' && reviewOrId.shareCode) return reviewOrId.shareCode;
+    const reviewId = reviewOrId && typeof reviewOrId === 'object' ? reviewOrId.id : reviewOrId;
     if (!reviewId) return null;
     const compact = String(reviewId).replace(/-/g, '').toUpperCase();
     if (compact.length < 8) return `${PREFIX}-${compact}`;
@@ -29,7 +34,11 @@ export function getLotCode(reviewId) {
 // URL publique vers laquelle le QR code doit pointer — le lien HTML vivant (Chantier B de la
 // finalisation Export Maker, `/r/:id`) plutôt que `/review/:id` : page sans chrome ni boutons
 // d'édition, pensée pour être scannée/partagée, qui re-rend toujours les données actuelles.
-export function getLotCodeUrl(reviewId, origin = (typeof window !== 'undefined' ? window.location.origin : '')) {
+// Avec un shareCode : lien court `/l/:code` (court = QR moins dense, lisible même petit sur un
+// sachet ; et le code survit à un changement d'URL de la fiche). Sinon `/r/:id` comme avant.
+export function getLotCodeUrl(reviewOrId, origin = (typeof window !== 'undefined' ? window.location.origin : '')) {
+    if (reviewOrId && typeof reviewOrId === 'object' && reviewOrId.shareCode) return `${origin}/l/${reviewOrId.shareCode}`;
+    const reviewId = reviewOrId && typeof reviewOrId === 'object' ? reviewOrId.id : reviewOrId;
     if (!reviewId) return null;
     return `${origin}/r/${reviewId}`;
 }
