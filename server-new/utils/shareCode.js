@@ -15,3 +15,16 @@ export function generateShareCode(length = 8) {
 }
 
 export const SHARE_CODE_PATTERN = /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6,16}$/
+
+const ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+/**
+ * Code de vérification envoyé par email (connexion, inscription) : 6 caractères 0-9A-Z, même format
+ * qu'avant, mais tiré par `crypto`. L'ancien `Math.random().toString(36)` était prédictible ET
+ * pouvait rendre moins de 6 caractères.
+ */
+export function generateVerificationCode(length = 6) {
+    let code = ''
+    for (let i = 0; i < length; i++) code += ALNUM[randomInt(ALNUM.length)]
+    return code
+}

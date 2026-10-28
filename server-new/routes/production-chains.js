@@ -51,6 +51,7 @@ import { wouldCreateCycle } from '../utils/graphCycle.js'
 import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
 import { resolveChainEdgeEndpoint } from '../utils/chainEdgeEndpoints.js'
 import { logChainEvent } from '../utils/chainAuditLog.js'
+import { generateShareCode } from '../utils/shareCode.js'
 
 const router = express.Router()
 const requireChainAccess = requireFeature('production_chain')
@@ -64,15 +65,9 @@ const normalizeEdge = (edge) => ({
     targetId: edge.targetNodeId ?? edge.targetAnnotationId
 })
 
-// Sans caractères ambigus (0/O, 1/I/L) — même alphabet que templates.js (generateShareCode).
-function generateChainShareCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    let code = ''
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return code
-}
+// Code de partage : `utils/shareCode.js` (crypto, même alphabet sans caractères ambigus que les
+// codes de lot et les templates). L'ancienne copie locale tirait au `Math.random`, donc prédictible.
+// Les codes déjà émis (alphabet d'alors, avec « L ») restent valides : la lecture compare tel quel.
 
 // Assemble le document complet d'une chaîne (nœuds/arêtes/annotations + flags dérivés) — factorisé
 // hors de GET /chains/:id pour être réutilisé tel quel par GET /shared/:code (résolution par code
@@ -233,7 +228,7 @@ router.post("/chains/:id/share", requireAuth, requireChainAccess, async (req, re
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const shareCode = generateChainShareCode()
+        const shareCode = generateShareCode()
         const updated = await prisma.productionChain.update({
             where: { id: req.params.id },
             data: { shareCode, isPublic: true }

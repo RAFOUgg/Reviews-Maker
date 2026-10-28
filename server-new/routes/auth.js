@@ -8,6 +8,7 @@ import { verifyUserTOTP } from '../services/totp.js'
 import { getUserLimits } from '../middleware/permissions.js'
 import { resolveAccess } from '../services/access.js'
 import { authLimiter, codeVerifyLimiter, passwordResetLimiter } from '../middleware/rateLimit.js'
+import { generateVerificationCode } from '../utils/shareCode.js'
 
 const router = express.Router()
 
@@ -700,8 +701,8 @@ router.post('/send-verification-code', passwordResetLimiter, asyncHandler(async 
         return res.status(200).json({ message: 'Si cet email existe, un code a été envoyé' })
     }
 
-    // Générer code 6 caractères alphanumériques
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    // Générer code 6 caractères alphanumériques (crypto, cf. utils/shareCode.js)
+    const code = generateVerificationCode()
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
     // Supprimer les anciens codes non vérifiés pour cet email

@@ -3,6 +3,7 @@ import { prisma } from '../server.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import { canReadFor } from '../services/access.js'
+import { generateShareCode } from '../utils/shareCode.js'
 
 // Échappement HTML pour /:id/export, qui renvoie du text/html sur l'origine de l'app.
 const escapeHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]))
@@ -488,14 +489,7 @@ router.get('/import/:code', asyncHandler(async (req, res) => {
     })
 }))
 
-// Helper pour générer un code de partage unique
-function generateShareCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Sans caractères ambigus
-    let code = ''
-    for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return code
-}
+// Générateur de code de partage : `utils/shareCode.js` (crypto), partagé avec les reviews et les
+// chaînes de production — l'ancienne copie locale tirait au `Math.random`, donc prédictible.
 
 export default router
