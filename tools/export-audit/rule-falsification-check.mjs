@@ -97,9 +97,19 @@ try {
     const target = await page.evaluate(() => {
         // Une FEUILLE porteuse de texte, hors de toute zone zoomée : poser la taille sur un
         // conteneur ne prouve rien, ses enfants redéclarent la leur.
+        //
+        // Et une feuille RENDUE : les pages d'export embarquent désormais un `<style>` de portée
+        // (`#export-maker-page-0 [data-module…] { … }`), feuille sans enfant dont le textContent est
+        // du CSS. La sonde le prenait pour cible (2026-10-28) : 6px posés sur un élément jamais
+        // peint, que E2 ignore à bon droit (`isVisible`) — la règle était déclarée muette à tort.
+        const NON_RENDU = new Set(['STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE', 'TITLE']);
         for (const el of document.querySelectorAll('.export-maker-page *')) {
-            if (el.closest('.react-flow')) continue;
+            if (NON_RENDU.has(el.tagName)) continue;
+            if (el.closest('.react-flow, svg')) continue;
             if (el.children.length) continue;
+            if (!el.getClientRects().length) continue;
+            const cs = getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) continue;
             const t = (el.textContent || '').trim();
             if (t.length < 4) continue;
             el.style.setProperty('font-size', '6px', 'important');
