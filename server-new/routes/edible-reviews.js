@@ -7,7 +7,7 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId, parsePagination, sanitizeEffectsPower } from '../utils/validation.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
 import { finalizeUploads } from '../middleware/uploads.js'
@@ -315,7 +315,7 @@ router.post('/', requireAuth, upload.array('images', 4), finalizeUploads, requir
 /**
  * GET /api/edible-reviews/:id
  */
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     const reviewId = req.params.id
 
     const review = await prisma.review.findUnique({

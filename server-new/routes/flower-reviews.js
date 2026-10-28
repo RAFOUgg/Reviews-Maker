@@ -14,7 +14,7 @@ import {
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requirePublishingAllowed, requireReviewWriteOrThrow, resolveAccess, resolveIdentityLink } from '../services/access.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
 import { finalizeUploads } from '../middleware/uploads.js'
 
@@ -845,7 +845,7 @@ router.post('/',
     }))
 
 // ===== GET /api/reviews/flower/:id - Récupérer une review Fleur =====
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     console.log(`🔍 GET /api/reviews/flower/${req.params.id}`)
 
     // Valider l'ID

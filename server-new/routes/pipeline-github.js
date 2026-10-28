@@ -1,7 +1,7 @@
 import express from 'express'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 
 const router = express.Router()
@@ -124,7 +124,7 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
  * GET /api/pipeline-github/:reviewId/:pipelineType
  * Récupérer un pipeline GitHub pour une review
  */
-router.get('/:reviewId/:pipelineType', asyncHandler(async (req, res) => {
+router.get('/:reviewId/:pipelineType', optionalAuth, asyncHandler(async (req, res) => {
     const { reviewId, pipelineType } = req.params
 
     // Le pipeline hérite de la visibilité de sa review : sans ce contrôle, les données de
