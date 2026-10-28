@@ -1,7 +1,8 @@
 import React from 'react'
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI'
 import LiquidSlider from '@/components/ui/LiquidSlider'
-import ColorWheelPicker from '../../../../components/shared/charts/ColorWheelPicker'
+import PaintableColorSilhouette from '../../../../components/shared/charts/PaintableColorSilhouette'
+import { CANNABIS_COLORS } from '../../../../data/cannabisColors'
 import { Eye } from 'lucide-react'
 
 const VISUAL_FIELDS = [
@@ -43,10 +44,17 @@ export default function VisuelTechnique({ formData = {}, handleChange = () => { 
                             <span className="text-lg">🎨</span>
                             Sélection colorimétrique
                         </h4>
-                        <ColorWheelPicker
-                            value={formData.selectedColors || []}
-                            onChange={handleColorChange}
-                            maxSelections={5}
+                        {/* Bud à peindre (L6) — remplace la roue + saisie de % à la main. Format stocké
+                            inchangé : [{ colorId, percentage, parts }] ; les `parts` (partie de la
+                            plante) déjà saisies sont conservées pour une teinte qui reste peinte. */}
+                        <PaintableColorSilhouette
+                            shape="bud"
+                            palette={CANNABIS_COLORS}
+                            value={(formData.selectedColors || []).map((sc) => ({ id: sc.colorId, percentage: sc.percentage }))}
+                            onChange={(next) => {
+                                const before = Object.fromEntries((formData.selectedColors || []).map((sc) => [sc.colorId, sc]));
+                                handleColorChange(next.map(({ id, percentage }) => ({ colorId: id, percentage, parts: before[id]?.parts || [] })));
+                            }}
                         />
                     </div>
                 </div>
