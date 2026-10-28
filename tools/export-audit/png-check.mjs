@@ -20,8 +20,8 @@ const args = Object.fromEntries(
         return [k, v.join('=') || true];
     })
 );
-const BASE = args.url || 'http://localhost:5173';
-const API = args.api || 'http://localhost:3000';
+const BASE = args.url || (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = args.api || (process.env.AUDIT_API || 'http://localhost:3000');
 const OUT = resolve(__dirname, 'reports', 'png');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -121,3 +121,6 @@ try {
         if (upstreamId) await deleteFixture(API, upstreamId);
     }
 }
+// Code de sortie (L21) : un export qui ne produit AUCUN fichier, ou qui lève une erreur JS, est un
+// échec — la sonde l'affichait mais sortait à 0, donc `run-all.mjs` ne pouvait pas le voir.
+process.exit(saved.length && !errs.length ? 0 : 1);

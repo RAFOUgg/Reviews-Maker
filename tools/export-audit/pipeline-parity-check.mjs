@@ -9,10 +9,10 @@
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const API = 'http://localhost:3000';
+const API = (process.env.AUDIT_API || 'http://localhost:3000');
 const id = await createFixture(API, 'flower', 'dense');
 console.log(`review ${id}`);
 

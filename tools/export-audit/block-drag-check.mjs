@@ -11,7 +11,7 @@
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const id = await createFixture(API, 'flower', 'dense', { isPublic: 'true' });

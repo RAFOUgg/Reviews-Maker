@@ -14,7 +14,7 @@
 import { chromium } from 'playwright';
 import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const COMBOS = [
@@ -25,7 +25,7 @@ const COMBOS = [
     ['Moderne Compact', 'Carré (1:1)'],
 ];
 
-const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense');
+const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense', { isPublic: 'true' });
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1800, height: 1100 } });
 p.on('pageerror', (e) => console.log('JS ERR:', String(e.message).slice(0, 140)));
@@ -76,20 +76,35 @@ const analyser = () => p.evaluate(() => {
 try {
     await p.goto(`${BASE}/edit/flower/${id}`, { waitUntil: 'networkidle' }); await sleep(5000);
     await p.getByRole('button', { name: /^Aperçu$/ }).first().click(); await sleep(4000);
-    await p.getByRole('button', { name: 'Fichier', exact: true }).first().click(); await sleep(2500);
 
+    // Parcours réécrit le 2026-10-28 (L21) : plus de bouton « Fichier » dans le Studio, et le format
+    // se choisit dans la modale d'export (depuis le 2026-08-13). Les pages analysées sont celles que
+    // la modale monte hors écran pour la capture — exactement ce qui part dans le fichier.
     for (const [tpl, fmt] of COMBOS) {
         await p.locator('button', { hasText: tpl }).first().click(); await sleep(2500);
+        await p.getByRole('button', { name: /^Exporter$/ }).first().click();
+        await p.getByText('Format du fichier').first().waitFor({ timeout: 30000 }); await sleep(1500);
         const bf = p.locator('button', { hasText: fmt }).first();
-        if (!(await bf.count()) || await bf.isDisabled()) { console.log(`\n── ${tpl} · ${fmt} — indisponible`); continue; }
-        await bf.click(); await sleep(4000);
-        const a = await analyser();
-        console.log(`\n── ${tpl} · ${fmt}`);
-        if (!a.trouve) { console.log('   page non trouvée'); continue; }
-        const part = a.totalOrphelins / Math.max(1, a.contenuReel) * 100;
-        console.log(`   page ${a.hauteurPage}px · contenu ${a.contenuReel}px · bas du dernier module ${a.basModules}px · ${a.nbModules} modules`);
-        console.log(`   contenu HORS module : ${a.totalOrphelins}px (${part.toFixed(0)}% du contenu)`);
-        a.orphelins.forEach((o) => console.log(`      ${String(o.hauteur).padStart(5)}px  <${o.balise}>  ${o.texte}`));
+        if (!(await bf.count()) || await bf.isDisabled()) { console.log(`\n── ${tpl} · ${fmt} — indisponible`); }
+        else {
+            await bf.click(); await sleep(1500);
+            await p.waitForFunction(() => !/Mesure du contenu en cours/.test(document.body.textContent), null, { timeout: 45000 }).catch(() => {});
+            await sleep(2500);
+            const a = await analyser();
+            console.log(`\n── ${tpl} · ${fmt}`);
+            if (!a.trouve) console.log('   page non trouvée');
+            else {
+                const part = a.totalOrphelins / Math.max(1, a.contenuReel) * 100;
+                console.log(`   page ${a.hauteurPage}px · contenu ${a.contenuReel}px · bas du dernier module ${a.basModules}px · ${a.nbModules} modules`);
+                console.log(`   contenu HORS module : ${a.totalOrphelins}px (${part.toFixed(0)}% du contenu)`);
+                a.orphelins.forEach((o) => console.log(`      ${String(o.hauteur).padStart(5)}px  <${o.balise}>  ${o.texte}`));
+            }
+        }
+        await p.keyboard.press('Escape'); await sleep(1000);
+        if (await p.getByText('Format du fichier').count()) {
+            const annuler = p.getByRole('button', { name: /^Annuler$/ }).last();
+            if (await annuler.count()) { await annuler.click(); await sleep(1000); }
+        }
     }
 } finally {
     await b.close();

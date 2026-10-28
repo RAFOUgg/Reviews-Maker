@@ -19,7 +19,7 @@ import { createFixture, deleteFixture } from './fixtures.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUDIT_SCRIPT = resolve(__dirname, 'auditRules.js');
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Combinaisons les plus contraintes (carré) et les plus courantes (16:9), plus un A4 témoin.

@@ -27,8 +27,8 @@ import { readFileSync } from 'fs';
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173';
-const API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const VIDEO_EXT = /\.(mp4|m4v|webm|ogv|mov|qt|mkv|avi|3gp|3g2|mts|m2ts|wmv|flv|mpeg|mpg|hevc)(\?|#|$)/i;
 

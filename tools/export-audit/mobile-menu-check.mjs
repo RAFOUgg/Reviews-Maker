@@ -9,7 +9,7 @@
  */
 import { chromium } from 'playwright';
 
-const BASE = process.argv[2] || 'http://localhost:5173';
+const BASE = process.argv[2] || (process.env.AUDIT_BASE || 'http://localhost:5173');
 const W = Number(process.argv[3] || 531);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const SEL = '.z-\\[10050\\], .z-\\[150\\]'; // accepte l'ancien z pour comparer avant/après

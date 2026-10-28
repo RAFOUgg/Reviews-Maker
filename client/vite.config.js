@@ -2,6 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Cible du proxy de dev. Surchargeable parce que le VPS fait tourner l'API de PRODUCTION sur
+// :3000 : un `vite` de test lancé sur cette machine relayait donc les écritures des sondes
+// (fixtures) vers la vraie base. Les sondes d'audit lancent leur propre API sur un autre port
+// (`tools/export-audit/run-all.mjs`) et passent `VITE_API_PROXY_TARGET` pour la viser.
+const API_PROXY_TARGET = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000'
+
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
@@ -29,7 +35,7 @@ export default defineConfig({
         port: 5173,
         proxy: {
             '/api': {
-                target: 'http://localhost:3000',
+                target: API_PROXY_TARGET,
                 changeOrigin: true,
                 secure: false,
                 ws: true,
@@ -46,7 +52,7 @@ export default defineConfig({
                 }
             },
             '/images': {
-                target: 'http://localhost:3000',
+                target: API_PROXY_TARGET,
                 changeOrigin: true
             },
             // Photos/vidéos de pipeline (routes/media-upload.js sert /media en statique côté
@@ -55,7 +61,7 @@ export default defineConfig({
             // résoudre en dev : elle reste cassée, donnant l'impression que le média n'a pas
             // été ajouté alors qu'il l'a bien été côté serveur.
             '/media': {
-                target: 'http://localhost:3000',
+                target: API_PROXY_TARGET,
                 changeOrigin: true
             }
         }

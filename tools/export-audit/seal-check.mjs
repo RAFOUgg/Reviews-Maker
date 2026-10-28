@@ -14,12 +14,12 @@
 import { chromium } from 'playwright';
 import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173';
-const API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const HASH = /empreinte(?:\s+actuelle)?\s+([0-9A-F]{12})/i;
 
-const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense');
+const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense', { isPublic: 'true' });
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
 let failed = false;
@@ -34,23 +34,27 @@ try {
     // ce qu'il observe ne prouve rien.
 
     // 1) L'empreinte imprimée dans le document exporté.
+    //
+    // Parcours réécrit le 2026-10-28 (L21) : le format du fichier se choisit dans la modale d'export
+    // depuis le 2026-08-13 — l'ancienne version cliquait « A4 (Document) » dans le Studio, où ce
+    // bouton n'existe plus. La modale est ouverte DEPUIS LE STUDIO (comme `png-check`) : ouverte
+    // depuis `/review/:id` elle lit la config sauvegardée, or « Appliquer » n'enregistre pas la
+    // review — on y mesurait le template par défaut (Moderne Compact, sans A4). Rien n'est
+    // enregistré ici, donc `updatedAt` ne bouge pas entre les deux lectures.
     await page.goto(`${BASE}/edit/flower/${id}`, { waitUntil: 'networkidle' });
-    await sleep(2200);
-    for (const name of [/^Aperçu$/, /^Exporter$/]) {
-        const t = page.getByRole('button', { name }).first();
-        if (await t.count()) { await t.click(); await sleep(3500); }
-        if (await page.locator('text=Choix du Template').count()) break;
-    }
+    await sleep(2500);
+    await page.getByRole('button', { name: /^Aperçu$/ }).first().click();
+    await sleep(3500);
     await page.locator('button', { hasText: 'Fiche Technique Détaillée' }).first().click();
-    await sleep(1200);
-    await page.locator('button', { hasText: 'A4 (Document)' }).first().click();
     await sleep(2500);
-    await page.getByRole('button', { name: /^Appliquer$/ }).first().click();
-    await sleep(2500);
-    await page.goto(`${BASE}/review/${id}`, { waitUntil: 'networkidle' });
-    await sleep(2000);
     await page.getByRole('button', { name: /^Exporter$/ }).first().click();
-    await sleep(14000);
+    await page.getByText('Format du fichier').first().waitFor({ timeout: 30000 });
+    await sleep(1500);
+    await page.locator('button', { hasText: 'A4 (Document)' }).first().click();
+    await page.waitForFunction(() => !/Mesure du contenu en cours/.test(document.body.textContent)
+        && (document.querySelector('.export-maker-page') || document.querySelector('#export-maker-canvas')),
+    null, { timeout: 60000 }).catch(() => {});
+    await sleep(4000);
     const docText = await page.evaluate(() => {
         const pages = [...document.querySelectorAll('.export-maker-page')];
         const root = pages.length ? pages[pages.length - 1] : document.querySelector('#export-maker-canvas');

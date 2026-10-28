@@ -29,11 +29,11 @@ import { fileURLToPath } from 'url';
 import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const BASE = 'http://localhost:5173';
-const API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense');
+const { id, upstreamId } = await createFixtureWithCanvases(API, 'flower', 'dense', { isPublic: 'true' });
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1800, height: 1100 } });
@@ -44,39 +44,51 @@ const countRule = (res, rule) =>
     res.flat().reduce((n, p) => n + p.violations.filter((v) => v.rule === rule).length, 0);
 
 try {
+    // Parcours actuel (réécrit le 2026-10-28, L21) : le format du fichier se choisit dans la modale
+    // d'export depuis le 2026-08-13 — l'ancienne version cliquait « A4 (Document) » dans le Studio,
+    // où ce bouton n'existe plus, et mourait sur un timeout sans rien falsifier.
     await page.goto(`${BASE}/edit/flower/${id}`, { waitUntil: 'networkidle' });
-    await sleep(2200);
-    for (const name of [/^Aperçu$/, /^Exporter$/]) {
-        const t = page.getByRole('button', { name }).first();
-        if (await t.count()) { await t.click(); await sleep(3500); }
-        if (await page.locator('text=Choix du Template').count()) break;
-    }
+    await sleep(2500);
+    await page.getByRole('button', { name: /^Aperçu$/ }).first().click();
+    await sleep(3500);
     await page.locator('button', { hasText: 'Fiche Technique Détaillée' }).first().click();
-    await sleep(1200);
-    await page.locator('button', { hasText: 'A4 (Document)' }).first().click();
     await sleep(2500);
-    await page.getByRole('button', { name: /^Appliquer$/ }).first().click();
-    await sleep(2500);
-
-    await page.goto(`${BASE}/review/${id}`, { waitUntil: 'networkidle' });
-    await sleep(2000);
     await page.getByRole('button', { name: /^Exporter$/ }).first().click();
-    await sleep(9000);
+    await page.getByText('Format du fichier').first().waitFor({ timeout: 30000 });
+    await sleep(1500);
+    await page.locator('button', { hasText: 'A4 (Document)' }).first().click();
+    // Les pages hors écran de la modale sont celles que l'export photographie : attendre que la
+    // mesure les ait réparties ET que le canevas de chaîne y soit monté (chargement asynchrone).
+    await page.waitForFunction(() => {
+        const t = document.body.textContent;
+        return !/Mesure du contenu en cours/.test(t)
+            && document.querySelector('.export-maker-page [data-module="productionChainCanvas"] .react-flow__node');
+    }, null, { timeout: 60000 }).catch(() => {});
+    await sleep(2000);
 
     await page.addScriptTag({ path: resolve(__dirname, 'auditRules.js') });
 
-    const audit = () => page.evaluate(() =>
-        [...document.querySelectorAll('.export-maker-page')]
-            .map((el) => window.__exportAudit.auditRender(el, { paged: true })));
+    // Pages photographiées : `.export-maker-page` quand la mesure pagine, sinon le canevas unique.
+    const audit = () => page.evaluate(() => {
+        const pages = [...document.querySelectorAll('.export-maker-page')];
+        const cibles = pages.length ? pages : [document.getElementById('export-maker-canvas')].filter(Boolean);
+        return cibles.map((el) => window.__exportAudit.auditRender(el, { paged: true }));
+    });
 
     const before = await audit();
+    if (!before.length) throw new Error('aucune page d’export montée — rien à auditer');
+    console.log(`(${before.length} page(s) auditée(s))`);
     console.log('RÉFÉRENCE       → E4b:', countRule(before, 'E4b'), '· E2:', countRule(before, 'E2'));
 
     // Défaut 1 — un nœud du canevas poussé hors de son cadre (la coupure que E4b doit voir).
-    await page.evaluate(() => {
-        const n = document.querySelector('[data-module="productionChainCanvas"] .react-flow__node');
+    const noeud = await page.evaluate(() => {
+        const n = document.querySelector('.export-maker-page [data-module="productionChainCanvas"] .react-flow__node')
+            || document.querySelector('[data-module="productionChainCanvas"] .react-flow__node');
+        if (!n) return false;
         n.style.transform = (n.style.transform || '') + ' translateY(-400px)';
+        return true;
     });
+    if (!noeud) throw new Error('aucun nœud de chaîne de production rendu — E4b ne peut pas être falsifiée');
     const cut = await audit();
     console.log('NŒUD HORS CADRE → E4b:', countRule(cut, 'E4b'),
         '|', cut.flat().flatMap((p) => p.violations).find((v) => v.rule === 'E4b')?.message || '—');

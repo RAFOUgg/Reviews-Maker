@@ -15,8 +15,8 @@ const args = Object.fromEntries(
         return [k, v.join('=') || true];
     })
 );
-const BASE = args.url || 'http://localhost:5173';
-const API = args.api || 'http://localhost:3000';
+const BASE = args.url || (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = args.api || (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const id = await createFixture(API, 'flower', 'dense');

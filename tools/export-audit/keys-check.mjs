@@ -14,7 +14,7 @@ const args = Object.fromEntries(
         return [k, v.join('=') || true];
     })
 );
-const API = args.api || 'http://localhost:3000';
+const API = args.api || (process.env.AUDIT_API || 'http://localhost:3000');
 const type = args.type || 'hash';
 
 const id = await createFixture(API, type, args.density || 'dense');

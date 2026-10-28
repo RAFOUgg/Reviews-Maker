@@ -9,7 +9,7 @@
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const id = await createFixture(API, 'flower', 'dense', { photoCount: 3 });
 const b = await chromium.launch();
@@ -38,10 +38,13 @@ try {
     await p.locator('button', { hasText: 'Image & Logo' }).first().click(); await sleep(1200);
 
     // 1. Le panneau n'affiche plus de fragment de code, et un seul sélecteur de photos.
-    const texte = await p.locator('text=Photos du rendu').first().count();
+    // Libellé « Médias du rendu » depuis l'ajout des vidéos produit (`ImageBrandingControls.jsx`) ;
+    // la sonde cherchait encore « Photos du rendu » et concluait à tort à l'absence du sélecteur.
+    // Le sélecteur n'existe qu'à partir de 2 médias : la fixture en porte 3 (`photoCount`).
+    const texte = await p.locator('text=Médias du rendu').count();
     const parasite = await p.getByText(')}', { exact: true }).count();
     const ancien = await p.locator('text=Photos affichées').count();
-    verdict('un seul sélecteur de photos', texte === 1 && ancien === 0, `« Photos du rendu » ×${texte}, ancien libellé ×${ancien}`);
+    verdict('un seul sélecteur de photos', texte === 1 && ancien === 0, `« Médias du rendu » ×${texte}, ancien libellé ×${ancien}`);
     verdict('aucun fragment de code affiché', parasite === 0, `«)}» ×${parasite}`);
 
     // 2. Le filtre agit sur le rendu.

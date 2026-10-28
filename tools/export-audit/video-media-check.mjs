@@ -21,8 +21,8 @@ import { createFixture, deleteFixture } from './fixtures.mjs';
 
 const OUT = resolve('reports');
 mkdirSync(OUT, { recursive: true });
-const BASE = 'http://localhost:5173';
-const API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173');
+const API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const VIDEO_EXT = /\.(mp4|m4v|mov|webm|mkv|avi|3gp)(\?|$)/i;
 

@@ -13,7 +13,7 @@
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Vocabulaire des blocs zoomables : `data-module` (templates) — `data-zoom-block` est
 // conservé dans le sélecteur pour rester valable si une surface le réintroduit.

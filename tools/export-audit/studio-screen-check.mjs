@@ -7,7 +7,7 @@
  */
 import { chromium } from 'playwright';
 import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
-const BASE='http://localhost:5173', API='http://localhost:3000';
+const BASE=(process.env.AUDIT_BASE || 'http://localhost:5173'), API=(process.env.AUDIT_API || 'http://localhost:3000');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const { id, upstreamId } = await createFixtureWithCanvases(API,'flower','dense');
 const b=await chromium.launch(); const p=await b.newPage({viewport:{width:1800,height:1100}});

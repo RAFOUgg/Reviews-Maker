@@ -1,10 +1,17 @@
 // Galerie publique (/gallery) : chaque carte porte nom + faits clés + pseudo cliquable + like.
 // Le pseudo ouvre la modale de profil ; le like met à jour le compteur affiché.
+//
+// Autonome depuis le 2026-10-28 (L21) : la sonde lisait la galerie telle qu'elle était, donc ne
+// mesurait rien sur une base vide (celle de `run-all.mjs`) — et sortait à 0 même en KO. Elle crée
+// désormais SA review publique (fixture jetable, supprimée en fin de sonde) et rend un code de sortie.
 import { chromium } from 'playwright';
-const BASE = 'http://localhost:5173';
+import { createFixture, deleteFixture } from './fixtures.mjs';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const OUT = process.argv[2] || 'tools/export-audit/reports';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let ko = 0;
+const id = await createFixture(API, 'flower', 'nominal', { isPublic: 'true' });
+console.log('review', id);
 const b = await chromium.launch();
 try {
     for (const [nom, w, h] of [['pc', 1400, 900], ['tel', 390, 844]]) {
@@ -32,5 +39,11 @@ try {
         }
         await p.close();
     }
-} finally { await b.close(); }
+} catch (e) {
+    console.log(`KO — ${e.message}`); ko++;
+} finally {
+    await b.close();
+    await deleteFixture(API, id);
+}
 console.log(ko === 0 ? 'OK — cartes de galerie informatives et interactives' : `${ko} défaut(s)`);
+process.exit(ko ? 1 : 0);

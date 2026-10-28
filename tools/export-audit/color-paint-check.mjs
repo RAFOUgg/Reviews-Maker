@@ -2,7 +2,7 @@
 // et deux gestes (une teinte + un glissé) suffisent à la changer, enregistrée au même format.
 import { chromium } from 'playwright';
 import { createFixture, deleteFixture } from './fixtures.mjs';
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = (process.env.AUDIT_API || 'http://localhost:3000');
 const OUT = process.argv[2] || 'tools/export-audit/reports';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let ko = 0;
@@ -69,3 +69,6 @@ for (const [type, shape, teintes] of [['hash', 'hash', ['Violacée', 'Blanche']]
     } finally { await b2.close(); await deleteFixture(API, fid).catch(() => {}); }
 }
 console.log(ko === 0 ? 'OK — couleur relue, peinte en 2 gestes, enregistrée au même format' : `${ko} défaut(s)`);
+// Code de sortie : sans lui la sonde affichait ses défauts mais sortait à 0 — invisible pour
+// `run-all.mjs`, donc pour la barrière de déploiement (L21).
+process.exit(ko ? 1 : 0);

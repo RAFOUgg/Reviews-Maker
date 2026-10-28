@@ -1,10 +1,33 @@
 // Parcours C (L16) : QR d'étiquette → /l/:code → fiche publique au téléphone. Usage :
-//   node tools/export-audit/lot-code-check.mjs <reviewId> <code> [dossierCaptures]
+//   node tools/export-audit/lot-code-check.mjs [<reviewId> <code>] [dossierCaptures]
+//
+// Sans argument (cas de `run-all.mjs`, L21) la sonde crée SA review publique, lui fait attribuer un
+// code de lot par la vraie route (`POST /api/reviews/:id/share-code`), puis la supprime. Elle
+// exigeait jusqu'ici un id et un code passés à la main — lancée sans, elle visitait `/l/undefined`,
+// affichait 3 défauts… et sortait à 0. Elle rend désormais un code de sortie.
 import { chromium } from 'playwright';
-const [, , ID, CODE, OUT = 'tools/export-audit/reports'] = process.argv;
-const BASE = 'http://localhost:5173', API = 'http://localhost:3000/api';
+import { createFixture, deleteFixture } from './fixtures.mjs';
+const argv = process.argv.slice(2);
+const manuel = argv.length >= 2;
+let [ID, CODE] = manuel ? argv : [];
+const OUT = (manuel ? argv[2] : argv[0]) || 'tools/export-audit/reports';
+const ROOT_API = (process.env.AUDIT_API || 'http://localhost:3000');
+const BASE = (process.env.AUDIT_BASE || 'http://localhost:5173'), API = `${ROOT_API}/api`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let ko = 0;
+let fixture = null;
+if (!manuel) {
+    fixture = await createFixture(ROOT_API, 'flower', 'nominal', { isPublic: 'true' });
+    const res = await fetch(`${API}/reviews/${fixture}/share-code`, { method: 'POST' });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.shareCode) {
+        console.log(`KO — attribution du code de lot : HTTP ${res.status} ${JSON.stringify(json).slice(0, 120)}`);
+        await deleteFixture(ROOT_API, fixture);
+        process.exit(1);
+    }
+    [ID, CODE] = [fixture, json.shareCode];
+    console.log(`review ${ID} · code ${CODE}`);
+}
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 390, height: 844 } });
 try {
@@ -29,5 +52,11 @@ try {
     const inconnu = await p.getByText('Code inconnu').count();
     console.log(`code inconnu → message : ${inconnu}`);
     if (!inconnu) { console.log('KO — pas de message pour un code inconnu'); ko++; }
-} finally { await b.close(); }
+} catch (e) {
+    console.log(`KO — ${e.message}`); ko++;
+} finally {
+    await b.close();
+    if (fixture) await deleteFixture(ROOT_API, fixture);
+}
 console.log(ko === 0 ? 'OK — parcours QR → fiche au téléphone' : `${ko} défaut(s)`);
+process.exit(ko ? 1 : 0);
