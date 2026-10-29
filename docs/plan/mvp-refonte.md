@@ -56,7 +56,7 @@ Statut : fait, **déployé** (2026-10-28 22:07, main `86ef3b92`). Barrières ver
 - **Accepté si** : `run-all` vert sur `mvp/L6-couleurs` ; toute sonde rouge est soit corrigée (sonde périmée) soit signalée (bug produit réel, alors STOP et rapport).
 
 ### L22 — Dette sécurité résiduelle (nouveau, suite de L11)
-Statut : PR ouverte (2026-10-28 nuit, Hermes) — branche `mvp/L22-dette-securite` (depuis `main` 6b4b7479), **non mergée** (L20 décidé par l'humain). Critères L22 atteints : audit prod 14 → 8, plus aucune critique/haute corrigeable sans `--force` (restent `tar` via `sqlite3@5`/`connect-sqlite3` et `nodemailer` ≥ 10.2.1, majeure) ; `node server.js` démarre (health 200) ; 429 en rafale sur un commentaire (anonyme et connecté, sonde `write-limits-check.mjs`). ⚠ Barrières rouges HORS lot, héritées de `main` : `lint:critical` 4 erreurs + `data-bubble`/`mobile-canvas` KO, toutes = `pinTargets` non défini (commit `6b4b7479`, item L24, non déployé en prod) ; `phenohunt-parity` KO puis vert relancé seul (mesure à 600 ms pendant une transition). `run-all` 41/44.
+Statut : fait, **déployé** (2026-10-29 10:33, main `0c146723`, run-all 45/45, lint:critical 0, build vert ; fait par Hermès de nuit, vérifié et déployé par Claude). Inclut le correctif `pinTargets` (`0c146723`) qui rendait main rouge.
 - `npm audit fix` (SANS `--force`) côté `server-new` : 15 vulns dont `proxy-addr` (critique, usurpation d'IP → contourne le rate limit), `tar`, `nodemailer` ; puis **démarrer le vrai process** (`node server.js`, health 200) — cf. mémoire « dépendance fantôme uuid a planté la prod ».
 - Rate limiting des écritures hors auth : commentaires, likes, uploads, `POST /api/reviews/:id/share-code`.
 - `DELETE /api/pipeline-github/:id` fait `include: { review }` alors que `PipelineGithub` n'a pas cette relation → plante à l'appel ; corriger (contrôle via `prisma.review.findUnique` comme le GET).
@@ -65,13 +65,13 @@ Statut : PR ouverte (2026-10-28 nuit, Hermes) — branche `mvp/L22-dette-securit
 - **Accepté si** : `npm audit --omit=dev` sans critique/haute corrigeable ; serveur démarre ; 429 obtenu en rafale sur un commentaire.
 
 ### L23 — Vérification visuelle de L1 + rendu de la puissance des effets (nouveau)
-Statut : PR ouverte (2026-10-29 nuit, Hermes) — branche `mvp/L23-effets-puissance` (empilée sur `mvp/L22-dette-securite` d5660453), **non mergée** (L20 décidé par l'humain). Critères L23 atteints : sonde `effects-power-check.mjs` verte (seule et dans `run-all`) + captures relues (formulaires 390×844, `/r/:id` ×5, exports PNG réels). Deux défauts réels trouvés et corrigés : légende de bornes masquée par le curseur et contraste 4.4:1 (`LiquidSlider`) ; `effectsPower` rendu par AUCUN des 5 templates (désormais rendu, avec le sens de l'échelle). ⚠ Barrières rouges HORS lot, héritées de `main` : `lint:critical` 4 erreurs `pinTargets` (item L24) ; `run-all` 43/45, KO `data-bubble`/`mobile-canvas` = même cause.
+Statut : fait, **déployé** (2026-10-29 10:33, main `0c146723`, run-all 45/45, lint:critical 0, build vert ; fait par Hermès de nuit, vérifié et déployé par Claude).
 - Sonde Playwright : curseurs « Puissance de chaque effet » (section Effets, 4 types) et légendes de bornes « 1 · … ··· 10 · … » (Texture, Goûts) — présents, lisibles à 390×844.
 - `effectsPower` (champ registre `list`) visible dans les 5 templates d'export quand renseigné.
 - **Accepté si** : sonde verte + captures relues.
 
 ### L24 — Petits défauts relevés le 2026-10-28 (nouveau)
-Statut : prêt — deploy main final
+Statut : prêt — deploy main final — 1er essai (2026-10-29 nuit, Hermès) arrêté par la limite d'usage de l'abonnement (HTTP 429) après 30 min, rien de poussé : à reprendre tel quel.
 - `EditGroupModal` (`PresetGroupsManager.jsx`) s'ouvre VIDE : le groupe édité n'est jamais pré-rempli → passer `group` à `CreateGroupModal` en valeurs initiales.
 - `NodeContextMenu.jsx`/`ChainNodeContextMenu.jsx` : `pinTargets` utilisé sans définition dans une modification non commitée d'une autre session (constaté le 2026-10-28) — si elle a été commitée entre-temps, rétablir la définition (HEAD du 2026-10-28 la contenait) ; sinon ne pas toucher.
 - `HomeReviewCard.jsx` : composant mort (la galerie publique a sa propre carte dans `GalleryPage.jsx`) → à verser dans L14.
