@@ -264,7 +264,7 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, tar
                     {onPinDataBubble && (
                         <button className="context-menu-item" onClick={handlePinDataBubble} style={{ fontWeight: 600 }}>
                             <MessageSquarePlus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                            Épingler les données en bulle{pinTargets.length > 1 ? ` (${pinTargets.length} éléments)` : ''}
+                            Épingler les données en bulle{actionTargets.length > 1 ? ` (${actionTargets.length} éléments)` : ''}
                         </button>
                     )}
                     <button className="context-menu-item" onClick={handleCenterView}>
