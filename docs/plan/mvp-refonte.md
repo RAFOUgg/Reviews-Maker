@@ -65,7 +65,7 @@ Statut : PR ouverte (2026-10-28 nuit, Hermes) — branche `mvp/L22-dette-securit
 - **Accepté si** : `npm audit --omit=dev` sans critique/haute corrigeable ; serveur démarre ; 429 obtenu en rafale sur un commentaire.
 
 ### L23 — Vérification visuelle de L1 + rendu de la puissance des effets (nouveau)
-Statut : prêt — deploy main final
+Statut : PR ouverte (2026-10-29 nuit, Hermes) — branche `mvp/L23-effets-puissance` (empilée sur `mvp/L22-dette-securite` d5660453), **non mergée** (L20 décidé par l'humain). Critères L23 atteints : sonde `effects-power-check.mjs` verte (seule et dans `run-all`) + captures relues (formulaires 390×844, `/r/:id` ×5, exports PNG réels). Deux défauts réels trouvés et corrigés : légende de bornes masquée par le curseur et contraste 4.4:1 (`LiquidSlider`) ; `effectsPower` rendu par AUCUN des 5 templates (désormais rendu, avec le sens de l'échelle). ⚠ Barrières rouges HORS lot, héritées de `main` : `lint:critical` 4 erreurs `pinTargets` (item L24) ; `run-all` 43/45, KO `data-bubble`/`mobile-canvas` = même cause.
 - Sonde Playwright : curseurs « Puissance de chaque effet » (section Effets, 4 types) et légendes de bornes « 1 · … ··· 10 · … » (Texture, Goûts) — présents, lisibles à 390×844.
 - `effectsPower` (champ registre `list`) visible dans les 5 templates d'export quand renseigné.
 - **Accepté si** : sonde verte + captures relues.
