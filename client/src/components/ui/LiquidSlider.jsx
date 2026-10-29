@@ -148,8 +148,12 @@ const LiquidSlider = ({
                 </motion.div>
             </div>
 
+            {/* `mt-3` : la pastille du curseur (20px) déborde de 8px sous la piste (8px, taille sm) —
+                avec `mt-1` elle se posait sur la légende et masquait « 10 · Dominant » à 8/10.
+                `text-white/60` : à `/45` la légende mesurait 4.4:1 sur la carte, sous le seuil
+                WCAG AA de 4.5:1 pour un texte de 11px (sonde `effects-power-check`, L23). */}
             {(lowText || highText) && (
-                <div className="flex justify-between gap-2 mt-1 text-[11px] leading-tight text-white/45" data-slider-bounds>
+                <div className="flex justify-between gap-2 mt-3 text-[11px] leading-tight text-white/60" data-slider-bounds>
                     <span>{lowBound} · {lowText}</span>
                     <span className="text-right">{max} · {highText}</span>
                 </div>
