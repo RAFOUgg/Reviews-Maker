@@ -559,19 +559,28 @@ const GroupCard = ({ group, onApply, onEdit, onDuplicate, onDelete }) => {
     );
 };
 
-// Modal de création (simplifié, à développer)
-const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFields }) => {
-    const [formData, setFormData] = useState({
-        name: '',
-        category: categories[0]?.name || 'Personnalisé',
-        icon: '⭐',
-        description: '',
-        fields: {}
-    });
+// Modal de création ; en édition, `initialGroup` pré-remplit le formulaire (L24 : la modale
+// d'édition s'ouvrait vide, le groupe n'était jamais transmis).
+const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFields, initialGroup = null }) => {
+    const [formData, setFormData] = useState(() => ({
+        name: initialGroup?.name ?? '',
+        category: initialGroup?.category ?? (categories[0]?.name || 'Personnalisé'),
+        icon: initialGroup?.icon ?? '⭐',
+        description: initialGroup?.description ?? '',
+        fields: { ...(initialGroup?.fields ?? {}) }
+    }));
 
-    const [selectedFields, setSelectedFields] = useState([]);
+    const [selectedFields, setSelectedFields] = useState(() => Object.keys(initialGroup?.fields ?? {}));
 
     if (!isOpen) return null;
+
+    const isEdit = Boolean(initialGroup);
+    // Les 10 premiers champs proposés, plus ceux déjà dans le groupe édité (sinon un champ au-delà
+    // du 10e serait invisible, donc impossible à décocher).
+    const shownFields = [
+        ...availableFields.slice(0, 10),
+        ...availableFields.slice(10).filter(f => selectedFields.includes(f.key)),
+    ];
 
     return (
         <motion.div
@@ -587,8 +596,8 @@ const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFiel
                 className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto border border-gray-700"
             >
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Plus className="w-6 h-6" />
-                    Créer un groupe de pré-réglages
+                    {isEdit ? <Edit2 className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+                    {isEdit ? 'Modifier le groupe de pré-réglages' : 'Créer un groupe de pré-réglages'}
                 </h3>
 
                 <div className="space-y-4">
@@ -642,7 +651,7 @@ const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFiel
                         </p>
 
                         <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {availableFields.slice(0, 10).map(field => (
+                            {shownFields.map(field => (
                                 <div key={field.key} className="flex items-center gap-3 bg-gray-700/50 p-2 rounded">
                                     <input
                                         type="checkbox"
@@ -694,7 +703,7 @@ const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFiel
                         disabled={!formData.name || Object.keys(formData.fields).length === 0}
                     >
                         <Save className="w-4 h-4 mr-2" />
-                        Créer le groupe
+                        {isEdit ? 'Enregistrer les modifications' : 'Créer le groupe'}
                     </LiquidButton>
                     <LiquidButton
                         onClick={onClose}
@@ -709,17 +718,20 @@ const CreateGroupModal = ({ isOpen, onClose, onCreate, categories, availableFiel
     );
 };
 
-// Modal d'édition (réutilise CreateGroupModal avec pre-fill)
+// Modal d'édition : CreateGroupModal pré-rempli avec le groupe. `key` force un formulaire neuf par
+// groupe (l'état n'est initialisé qu'au montage).
 const EditGroupModal = ({ isOpen, onClose, group, onUpdate, categories, availableFields }) => {
     if (!isOpen || !group) return null;
 
     return (
         <CreateGroupModal
+            key={group.id}
             isOpen={isOpen}
             onClose={onClose}
             onCreate={(data) => onUpdate(group.id, data)}
             categories={categories}
             availableFields={availableFields}
+            initialGroup={group}
         />
     );
 };

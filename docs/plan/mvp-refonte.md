@@ -71,7 +71,7 @@ Statut : fait, **déployé** (2026-10-29 10:33, main `0c146723`, run-all 45/45, 
 - **Accepté si** : sonde verte + captures relues.
 
 ### L24 — Petits défauts relevés le 2026-10-28 (nouveau)
-Statut : prêt — deploy main final — 1er essai (2026-10-29 nuit, Hermès) arrêté par la limite d'usage de l'abonnement (HTTP 429) après 30 min, rien de poussé : à reprendre tel quel.
+Statut : fait (2026-10-29, Claude) — `EditGroupModal` pré-remplie (nom, description, catégorie, icône, champs cochés + valeurs, libellé « Enregistrer les modifications »). `pinTargets` : déjà corrigé et déployé (`0c146723`). Vérification par sonde IMPOSSIBLE : le seul écran qui monte `PresetGroupsManager` est `/example-pipeline`, qui plante (`PipelineGridView`/react-window : « Cannot convert undefined or null to object ») — composant inaccessible en prod, versé dans L14.
 - `EditGroupModal` (`PresetGroupsManager.jsx`) s'ouvre VIDE : le groupe édité n'est jamais pré-rempli → passer `group` à `CreateGroupModal` en valeurs initiales.
 - `NodeContextMenu.jsx`/`ChainNodeContextMenu.jsx` : `pinTargets` utilisé sans définition dans une modification non commitée d'une autre session (constaté le 2026-10-28) — si elle a été commitée entre-temps, rétablir la définition (HEAD du 2026-10-28 la contenait) ; sinon ne pas toucher.
 - `HomeReviewCard.jsx` : composant mort (la galerie publique a sa propre carte dans `GalleryPage.jsx`) → à verser dans L14.
@@ -113,6 +113,7 @@ Statut : prêt — deploy main final
 - **NE PAS toucher** `ExportMaker.jsx` (gardé pour ses tests + `ExportValidationDashboard`).
 - **Accepté si** : build + `run-all` verts après chaque commit ; zéro import cassé.
 
+- Ajouté le 2026-10-29 (constaté en L24) : `HomeReviewCard.jsx` ; `PresetGroupsManager.jsx` + `PipelineWithSidebar.jsx` + `ResponsivePipelineView.jsx` + page `/example-pipeline` (`ExamplePipelineIntegration.jsx`, plante dans `PipelineGridView`) — aucun n'est atteignable depuis l'app réelle.
 ### L12b — Entreprise complète
 Statut : prêt — deploy main final
 - Invitation/retrait de membres, rôles hiérarchiques, journal des actions des membres sur les ressources de l'entreprise (`AuditLog`, déjà utilisé par la Chaîne de production).
