@@ -35,6 +35,24 @@ function isFilled(v) {
     return true;
 }
 
+/**
+ * Puissance de chaque effet (L1) — pastilles « Relaxant · 8/10 », déjà nommées et triées du plus
+ * fort au plus faible par `exportDataAdapter` (clé de registre `effectsPower`, type `list`).
+ *
+ * Aucun des 5 templates ne la rendait (mesuré le 2026-10-29, sonde `effects-power-check`) : le
+ * champ est rangé dans le groupe `effects`, qu'aucun `GISEMENT_GROUPS` ne couvre — chaque template
+ * rend ses effets à la main. D'où cette lecture unique, que chaque template met en forme dans son
+ * propre idiome. Interrupteur opt-out `effectsPower` (panneau Contenu, dérivé du registre).
+ */
+export function getEffectsPowerItems(reviewData, contentModules) {
+    if (!isModuleOn(contentModules, 'effectsPower')) return [];
+    const v = reviewData?.effectsPower;
+    return (Array.isArray(v) ? v : []).filter((x) => typeof x === 'string' && x.trim() !== '');
+}
+
+/** Sens de l'échelle, imprimé avec les pastilles : une note nue se lit comme une quantité. */
+export const EFFECTS_POWER_SCALE = '1 = à peine perceptible · 10 = dominant';
+
 // ── Grille cannabinoïdes complète (majeurs + acides + mineurs) via le référentiel ──────
 const CANNABINOID_BY_ID = Object.fromEntries(CANNABINOIDS.map((c) => [c.id, c]));
 

@@ -214,6 +214,8 @@ const DEFAULT_CONFIG = {
         aromas: true,
         tastes: true,
         effects: true,
+        // Puissance de chaque effet (L1) — interrupteur du champ de registre `effectsPower`.
+        effectsPower: true,
         tastesIntensity: true,
 
         // === NIVEAUX THC/CBD ===

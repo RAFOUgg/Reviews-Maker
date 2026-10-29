@@ -20,7 +20,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import ScoreBoard from './sections/ScoreBoard';
-import { GisementSection } from './sections/RegistrySections';
+import { GisementSection, getEffectsPowerItems, EFFECTS_POWER_SCALE } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import FitToFill from './frame/FitToFill';
 import MediaFrame from '../export/interactive/MediaFrame';
@@ -77,6 +77,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
+    const effectsPower = getEffectsPowerItems(reviewData, contentModules).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
     const { filled, value: ratingValue } = formatRating(reviewData.rating || 0, 5);
 
@@ -444,6 +445,18 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                             {effects.map((e, i) => renderTag(e, i))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Puissance de chaque effet (L1) — « Effet · n/10 », du plus fort au plus faible. */}
+                {effectsPower.length > 0 && (
+                    <div>
+                        <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            ⚡ Puissance ({EFFECTS_POWER_SCALE})
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                            {effectsPower.map((e, i) => renderTag(e, i))}
                         </div>
                     </div>
                 )}

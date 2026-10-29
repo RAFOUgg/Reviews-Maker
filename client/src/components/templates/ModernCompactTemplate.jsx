@@ -31,7 +31,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import ScoreBoard from './sections/ScoreBoard';
-import { CannabinoidGrid, GisementSection } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSection, getEffectsPowerItems, EFFECTS_POWER_SCALE } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import { templateSection } from '../../store/exportMakerConstants';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
@@ -92,6 +92,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const dryPuffNotes = asArray(reviewData.dryPuffNotes).slice(0, limits.maxTags);
     const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
+    const effectsPower = getEffectsPowerItems(reviewData, contentModules).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
 
@@ -138,6 +139,11 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             backgroundColor: colorWithOpacity(colors.accent, 20),
             color: colors.accent,
             fontWeight: '500',
+            // Sans lui, l'export PNG RÉEL (html-to-image) coupait chaque pastille en deux lignes
+            // (« Relaxant · » / « 8/10 », l'émoji au-dessus du nom) qui débordaient de la pastille —
+            // invisible dans l'aperçu live, vu sur le fichier téléchargé (L23). Même remède que les
+            // titres de section du correctif #10 : déterministe, ne dépend d'aucun calcul de largeur.
+            whiteSpace: 'nowrap',
         },
         infoCard: {
             backgroundColor: colorWithOpacity(colors.accent, 15),
@@ -552,6 +558,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         {renderTags(effects)}
                     </div>
                 ) : renderEmptyHint('⚡', 'Effets ressentis')
+            )}
+
+            {/* Puissance de chaque effet (L1) — pastilles « Effet · n/10 », du plus fort au plus
+                faible ; le sens de l'échelle suit le libellé (une note nue se lit comme une quantité). */}
+            {effectsPower.length > 0 && (
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>⚡ Puissance des effets ({EFFECTS_POWER_SCALE})</div>
+                    {renderTags(effectsPower)}
+                </div>
             )}
 
             {/* Aromas */}

@@ -27,7 +27,7 @@ import TemplateSection from './sections/TemplateSection';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 // Base d'icônes unique — 4e et dernière copie locale de la même table supprimée.
 import { GROUP_ICONS } from '../../utils/fieldIcons';
-import { CannabinoidGrid, getCannabinoidItems, GisementSection } from './sections/RegistrySections';
+import { CannabinoidGrid, getCannabinoidItems, GisementSection, getEffectsPowerItems, EFFECTS_POWER_SCALE } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import MediaFrame from '../export/interactive/MediaFrame';
 
@@ -160,6 +160,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     );
 
     const massBalanceRows = getMassBalanceRows(reviewData);
+    const effectsPower = getEffectsPowerItems(reviewData, config.contentModules);
     const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
 
     const hasLabInfo = reviewData.labName || reviewData.labMethod || reviewData.labAccredited;
@@ -375,6 +376,23 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
             {getCannabinoidItems(reviewData, config.contentModules).length > 0 && (
                 <Section moduleId="cannabinoidGrid" title="Profil cannabinoïde" icon="🧪">
                     <CannabinoidGrid reviewData={reviewData} contentModules={config.contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+                </Section>
+            )}
+
+            {/* Puissance de chaque effet (L1, rendue depuis L23) — « Effet · n/10 », du plus fort au
+                plus faible, avec le sens de l'échelle : une note nue se lit comme une quantité. */}
+            {effectsPower.length > 0 && (
+                <Section moduleId="effectsPower" title="Puissance des effets" icon="⚡">
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: 6 }}>{EFFECTS_POWER_SCALE}</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {effectsPower.map((item) => (
+                            <span key={item} style={{
+                                display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 999,
+                                background: colorWithOpacity(colors.accent, 12), border: `1px solid ${colorWithOpacity(colors.accent, 30)}`,
+                                fontSize: `${fontSize.small}px`, color: colors.textPrimary, fontWeight: 600, whiteSpace: 'nowrap',
+                            }}>{item}</span>
+                        ))}
+                    </div>
                 </Section>
             )}
 

@@ -27,7 +27,7 @@ import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
-import { CannabinoidGrid, GisementSection } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSection, getEffectsPowerItems, EFFECTS_POWER_SCALE } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 
@@ -81,6 +81,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
     const exhalationNotes = asArray(reviewData.exhalationNotes).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags + 2);
+    const effectsPower = getEffectsPowerItems(reviewData, contentModules).slice(0, limits.maxTags + 2);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
     const substrat = extractSubstrat(reviewData.substratMix);
@@ -130,6 +131,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             color: colors.accent,
             fontWeight: '500',
             margin: `${spacing.gap * 0.7}px`,
+            // Une pastille ne se coupe pas : l'export PNG réel la scindait en deux lignes (L23).
+            whiteSpace: 'nowrap',
         },
         infoBox: {
             background: glass.background,
@@ -497,11 +500,19 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
-                {/* Effects */}
-                {contentModules.effects && effects.length > 0 && (
+                {/* Effects — la section existe aussi pour la seule puissance (L1), interrupteur à part */}
+                {((contentModules.effects && effects.length > 0) || effectsPower.length > 0) && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚡ Effets Ressentis</h2>
-                        {renderTags(effects)}
+                        {contentModules.effects && renderTags(effects)}
+                        {effectsPower.length > 0 && (
+                            <div style={{ marginTop: `${spacing.element * 2}px` }}>
+                                <p style={{ ...styles.paragraph, marginBottom: `${spacing.element}px` }}>
+                                    <strong>Puissance des effets</strong> ({EFFECTS_POWER_SCALE}) :
+                                </p>
+                                {renderTags(effectsPower)}
+                            </div>
+                        )}
                         {contentModules.dureeEffet && reviewData.dureeEffet && (
                             <p style={{ ...styles.paragraph, marginTop: `${spacing.element * 2}px` }}>
                                 <strong>Durée des effets :</strong> {reviewData.dureeEffet}

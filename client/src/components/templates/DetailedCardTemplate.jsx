@@ -37,7 +37,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { noteWithEmoji } from '../../utils/noteEmoji';
-import { getCannabinoidItems, GisementSection, isModuleOn } from './sections/RegistrySections';
+import { getCannabinoidItems, GisementSection, isModuleOn, getEffectsPowerItems, EFFECTS_POWER_SCALE } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import SensoryRadar from './sections/SensoryRadar';
 import ScoreBoard from './sections/ScoreBoard';
@@ -195,6 +195,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cannabinoidItems = getCannabinoidItems(reviewData, contentModules);
+    const effectsPower = getEffectsPowerItems(reviewData, contentModules);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     // Photos retenues par l'utilisateur (`config.image.selected`) — jamais `reviewData.images`
@@ -383,6 +384,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             // `accentReadable` et non `accent` : sur le papier crème, un chip
                             // d'arôme en accent de palette tombait à 2.35:1 (mesuré).
                             color: variant === 'primary' ? accentOnChip : textPrimary,
+                            // Une pastille ne se coupe pas : l'export PNG réel scindait
+                            // « Relaxant · 8/10 » en deux lignes hors de la pastille (L23).
+                            whiteSpace: 'nowrap',
                         }}>
                             {noteWithEmoji(extractLabel(it))}
                         </span>
@@ -823,6 +827,15 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             <ChipGroup title="Arômes secondaires · goûts" items={secondaryAromas.length > 0 ? secondaryAromas : tastes} variant="default" />
                         </div>
                         {terpenes.length > 0 && <div style={{ marginTop: spacing.element }}><ChipGroup title="Terpènes" items={terpenes} variant="default" /></div>}
+                    </Section>
+                )}
+
+                {/* ── PUISSANCE DES EFFETS (L1, rendue depuis L23) ── Bloc à part plutôt que sous
+                    « Profil aromatique » : un effet n'est ni un arôme ni un terpène, et ce bloc doit
+                    exister même sans aucun arôme saisi. Le sens de l'échelle sert de sous-titre. */}
+                {effectsPower.length > 0 && (
+                    <Section icon="⚡" title="Puissance des effets" moduleId="effectsPower">
+                        <ChipGroup title={EFFECTS_POWER_SCALE} items={effectsPower} variant="primary" />
                     </Section>
                 )}
 

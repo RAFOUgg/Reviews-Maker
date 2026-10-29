@@ -25,6 +25,7 @@ export const MODULE_META = {
     cannabinoidGrid: { label: 'Profil cannabinoïde', icon: '🧪' },
     sensoryRadar: { label: 'Empreinte sensorielle', icon: '🕸️' },
     aromaticProfile: { label: 'Profil aromatique', icon: '🌸' },
+    effectsPower: { label: 'Puissance des effets', icon: '⚡' },
     labData: { label: 'Données laboratoire & curing', icon: '🔬' },
     documents: { label: 'Documents & certificats', icon: '📎' },
     description: { label: 'Commentaire', icon: '💬' },
@@ -195,6 +196,10 @@ const MODULE_GROUPS = {
     cannabinoidProfile: 'chemistry',
     thcCbdMini: 'chemistry',
     aromaticProfile: 'chemistry',
+    // Même groupe que le profil aromatique qu'il suit dans le flux (et qui le CONTIENT sur
+    // Moderne Compact/Story/Blog) : un groupe à part entre deux blocs « chimie » y inviterait
+    // une coupure de page.
+    effectsPower: 'chemistry',
     labData: 'chemistry',
     // Le certificat se lit avec les données qu'il atteste, jamais en annexe.
     documents: 'chemistry',
